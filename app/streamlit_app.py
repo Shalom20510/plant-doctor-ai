@@ -279,53 +279,178 @@ def log_prediction(model_version, image_name, label, probability, status):
 
 
 def inject_human_ui():
-    """Apply a restrained, editorial gardening-site style without changing model behavior."""
+    """Apply a clean, accessible botanical theme without changing model behavior."""
     st.markdown(
         """
         <style>
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap');
-        :root { --leaf: #426747; --leaf-dark: #203d2b; --ink: #26332a; --muted: #687267; --paper: #f0f4e9; --line: #dce5d5; }
-        .stApp { background: var(--paper); color: var(--ink); }
-        [data-testid="stHeader"] { background: rgba(250,249,244,.92); }
-        .block-container { max-width: 1180px; padding-top: 1.4rem; padding-bottom: 3rem; }
-        html, body, [class*="css"] { font-family: 'DM Sans', sans-serif; }
-        h1, h2, h3 { color: var(--leaf-dark); letter-spacing: -.035em; }
-        h1, h2 { font-family: 'Newsreader', Georgia, serif; font-weight: 600; }
-        h1 { font-size: clamp(2.5rem, 5vw, 4.3rem) !important; line-height: 1.02 !important; }
-        h2 { font-size: 2rem !important; }
-        p, li, label { color: var(--ink); }
-        .plant-brand { font-size: 1.25rem; font-weight: 700; letter-spacing: .01em; color: var(--leaf-dark); padding: .35rem 0 .65rem; }
-        .plant-eyebrow { text-transform: uppercase; letter-spacing: .16em; font-size: .72rem; font-weight: 700; color: var(--leaf); margin-bottom: .8rem; }
-        .plant-intro { max-width: 600px; color: var(--muted); font-size: 1.12rem; line-height: 1.7; }
-        .plant-note { background: #e6eddd; border-left: 3px solid #78916d; padding: 1rem 1.1rem; color: #465344; border-radius: 0 8px 8px 0; font-size: .94rem; }
-        .sample-caption { font-size: .88rem; font-weight: 600; margin-top: .35rem; color: var(--leaf-dark); }
-        .example-panel { background: rgba(255,255,250,.82); border: 1px solid var(--line); padding: 1rem; border-radius: 14px; }
-        [data-testid="stFileUploader"] button { background: var(--leaf) !important; color: white !important; border: 0 !important; }
-        [data-testid="stFileUploader"] button p { color: white !important; }
-        [data-testid="stFileUploader"] small, [data-testid="stFileUploader"] span { color: var(--ink); }
-        .stApp [data-testid="stHeader"] { background: rgba(240,244,233,.98); }
-        .plant-brand { font-size: 1.4rem; padding: .35rem 0 .8rem; }
-        .plant-intro { font-size: 1.15rem; }
-        .block-container { max-width: 1260px; padding-top: 2rem; }
-        [data-testid="stFileUploader"] { background: #fffefa; border: 1px dashed #a8b5a0; border-radius: 12px; padding: 1rem; }
-        [data-testid="stFileUploader"] section { border: 0; }
-        [data-testid="stFileUploader"] { color: #26332a; }
-        [data-testid="stFileUploader"] button { background: #426747 !important; border: 1px solid #426747 !important; }
-        [data-testid="stFileUploader"] button p { color: #ffffff !important; }
-        [data-testid="stFileUploaderDropzone"] { background: #fffefa !important; }
-        .stButton > button[kind="primary"] { background: var(--leaf); border: 1px solid var(--leaf); border-radius: 7px; min-height: 2.8rem; font-weight: 600; }
-        .stButton > button[kind="primary"]:hover { background: var(--leaf-dark); border-color: var(--leaf-dark); }
-        .stButton > button { border-radius: 7px; }
-        [data-testid="stMetric"] { background: #fffefa; border: 1px solid var(--line); padding: 1rem; border-radius: 9px; }
-        [data-testid="stAlert"] { border-radius: 8px; }
+        :root {
+            --leaf: #426747;
+            --leaf-dark: #203d2b;
+            --ink: #26332a;
+            --muted: #647064;
+            --paper: #f4f5ed;
+            --surface: #fffefa;
+            --line: #dce4d5;
+            --sage: #e7eddf;
+        }
+        .stApp {
+            background: var(--paper);
+            color: var(--ink);
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+        [data-testid="stHeader"] {
+            background: rgba(244,245,237,.96);
+        }
+        .block-container {
+            max-width: 1180px;
+            padding-top: 1.35rem;
+            padding-bottom: 3.5rem;
+        }
+        h1, h2, h3, h4 {
+            color: var(--leaf-dark);
+            letter-spacing: -.025em;
+        }
+        h1, h2 { line-height: 1.15; }
+        h2 { font-size: clamp(1.8rem, 3vw, 2.35rem) !important; }
+        h3, h4 { letter-spacing: -.015em; }
+        p, li, label, [data-testid="stMarkdownContainer"] {
+            color: var(--ink);
+        }
+        .plant-brand {
+            display: flex;
+            align-items: baseline;
+            gap: .6rem;
+            flex-wrap: wrap;
+            color: var(--leaf-dark);
+            font-size: 1.35rem;
+            font-weight: 750;
+            letter-spacing: -.025em;
+            padding: .35rem 0 .8rem;
+        }
+        .plant-brand span {
+            color: var(--muted);
+            font-size: .98rem;
+            font-weight: 400;
+            letter-spacing: 0;
+        }
+        .plant-eyebrow {
+            text-transform: uppercase;
+            letter-spacing: .15em;
+            font-size: .72rem;
+            font-weight: 750;
+            color: var(--leaf);
+            margin: .2rem 0 1rem;
+        }
+        .plant-intro {
+            max-width: 600px;
+            color: var(--muted);
+            font-size: 1.06rem;
+            line-height: 1.75;
+        }
+        .plant-note {
+            background: var(--sage);
+            border-left: 3px solid #78916d;
+            padding: 1rem 1.1rem;
+            color: #344535;
+            border-radius: 0 10px 10px 0;
+            font-size: .94rem;
+            line-height: 1.6;
+            margin: 1.1rem 0;
+        }
+        .example-card {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            padding: 1.1rem;
+            overflow: hidden;
+        }
+        .example-art {
+            background: #e9efe2;
+            border-radius: 13px;
+            padding: .5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 290px;
+        }
+        .example-title {
+            color: var(--leaf-dark);
+            font-size: 1.12rem;
+            font-weight: 700;
+            margin: .9rem 0 .25rem;
+        }
+        .example-copy {
+            color: var(--muted);
+            font-size: .9rem;
+            line-height: 1.55;
+            margin: 0;
+        }
+        /* Streamlit uploader: force a light dropzone and readable dark text. */
+        [data-testid="stFileUploader"] {
+            background: var(--surface) !important;
+            border: 1px dashed #a9b8a1 !important;
+            border-radius: 14px !important;
+            padding: 1rem !important;
+        }
+        [data-testid="stFileUploader"] section,
+        [data-testid="stFileUploaderDropzone"],
+        [data-testid="stFileUploaderDropzone"] > div {
+            background: var(--surface) !important;
+            border: 0 !important;
+        }
+        [data-testid="stFileUploader"] *,
+        [data-testid="stFileUploaderDropzoneInstructions"] *,
+        [data-testid="stFileUploader"] small {
+            color: var(--ink) !important;
+            opacity: 1 !important;
+        }
+        [data-testid="stFileUploader"] button,
+        [data-testid="stFileUploader"] button p,
+        [data-testid="stFileUploader"] button span {
+            background: var(--leaf) !important;
+            color: #ffffff !important;
+            border: 1px solid var(--leaf) !important;
+            opacity: 1 !important;
+        }
+        [data-testid="stFileUploader"] button {
+            border-radius: 8px !important;
+        }
+        [data-testid="stFileUploader"] button:hover {
+            background: var(--leaf-dark) !important;
+            border-color: var(--leaf-dark) !important;
+        }
+        .stButton > button[kind="primary"] {
+            background: var(--leaf) !important;
+            color: #ffffff !important;
+            border: 1px solid var(--leaf) !important;
+            border-radius: 9px !important;
+            min-height: 2.8rem;
+            font-weight: 650;
+        }
+        .stButton > button[kind="primary"]:hover {
+            background: var(--leaf-dark) !important;
+            border-color: var(--leaf-dark) !important;
+        }
+        .stButton > button { border-radius: 9px; }
+        [data-testid="stMetric"] {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            padding: 1rem;
+            border-radius: 12px;
+        }
+        [data-testid="stAlert"] { border-radius: 10px; }
         hr { border-color: var(--line); }
         footer { visibility: hidden; }
-        @media (max-width: 700px) { .block-container { padding-left: 1rem; padding-right: 1rem; } }
+        @media (max-width: 700px) {
+            .block-container { padding: 1rem 1rem 2.5rem; }
+            .plant-brand { font-size: 1.18rem; }
+            .plant-brand span { font-size: .88rem; }
+            .example-art { min-height: 220px; }
+        }
         </style>
         """,
         unsafe_allow_html=True,
     )
-
 
 def main():
     inject_human_ui()
@@ -355,13 +480,34 @@ def main():
         )
         st.caption("JPG or PNG · Clear, well-lit leaf photos work best")
     with right:
-        st.markdown("#### Example of a good photo")
-        st.image(
-            "https://commons.wikimedia.org/wiki/Special:Redirect/file/Green_leaf_close_up.jpg",
-            width=460,
+        st.markdown(
+            """
+            <div class="example-card">
+              <div class="example-art">
+                <svg viewBox="0 0 420 320" role="img" aria-label="Illustration of a healthy green plant" style="width:100%;max-width:390px;height:auto;">
+                  <ellipse cx="210" cy="282" rx="100" ry="12" fill="#d3dfc9"/>
+                  <path d="M210 253 C207 211 212 171 207 112" stroke="#426747" stroke-width="7" stroke-linecap="round" fill="none"/>
+                  <path d="M207 181 C168 171 147 144 145 111 C177 116 204 139 207 181Z" fill="#71956a"/>
+                  <path d="M208 149 C237 140 263 111 263 79 C231 88 211 111 208 149Z" fill="#426747"/>
+                  <path d="M209 218 C173 213 148 191 143 164 C176 166 202 187 209 218Z" fill="#9bb68b"/>
+                  <path d="M210 205 C246 197 271 173 277 145 C244 151 218 175 210 205Z" fill="#62875b"/>
+                  <path d="M208 124 C188 111 180 88 187 65 C208 79 218 101 208 124Z" fill="#b3c9a4"/>
+                  <path d="M210 253 C210 236 211 224 210 211" stroke="#426747" stroke-width="5" stroke-linecap="round" fill="none"/>
+                  <path d="M157 132 L202 171 M254 96 L213 139 M157 181 L202 210 M266 158 L216 197 M190 76 L207 117" stroke="#d9e6d0" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                  <path d="M153 246 L267 246 L253 295 Q210 309 167 295 Z" fill="#c88461"/>
+                  <path d="M146 239 Q210 230 274 239 L270 254 Q210 264 150 254 Z" fill="#a96547"/>
+                  <path d="M177 269 Q210 277 243 269" stroke="#dba184" stroke-width="3" stroke-linecap="round" fill="none"/>
+                  <circle cx="307" cy="61" r="20" fill="#d3dfc9"/>
+                  <path d="M300 61 Q307 48 314 61 Q307 74 300 61Z" fill="#426747"/>
+                </svg>
+              </div>
+              <div class="example-title">What a good photo should show</div>
+              <p class="example-copy">One leaf in focus, clear details, and soft natural daylight. This illustration is a guide to framing, not a real plant photo.</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
         )
-        st.caption("One leaf, in focus, with visible details. Natural daylight helps.")
-        st.caption("Photo: Kirubanithi Suba, CC BY-SA 4.0 (Wikimedia Commons).")
+
 
     st.divider()
     if uploaded_file is None:
