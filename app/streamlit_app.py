@@ -41,7 +41,7 @@ LANGUAGES = {"English": "en", "తెలుగు": "te"}
 TRANSLATIONS = {
     "en": {},
     "te": {
-        "Language / భాష": "Language / భాష",
+        "Language / భాష": "భాష",
         "A simple plant health check": "మొక్క ఆరోగ్యాన్ని సులభంగా పరీక్షించండి",
         "What's happening to your plant?": "మీ మొక్కకు ఏమైంది?",
         "Choose a leaf photo": "ఆకు ఫోటోను ఎంచుకోండి",
@@ -67,6 +67,19 @@ TRANSLATIONS = {
         "Symptoms to check": "పరిశీలించాల్సిన లక్షణాలు",
         "Suggested next step": "తదుపరి సూచన",
         "Prevention": "నివారణ",
+        "In focus": "ఫోకస్‌లో ఉంది",
+        "Natural daylight": "సహజ పగటి వెలుతురు",
+        "One leaf, close-up": "ఒక ఆకు, దగ్గరి దృశ్యం",
+        "Show spots and edges": "మచ్చలు, అంచులు కనిపించాలి",
+        "🌿 Plant Doctor": "🌿 మొక్కల వైద్యుడు",
+        "/ a little help for healthier plants": "/ ఆరోగ్యకరమైన మొక్కల కోసం చిన్న సహాయం",
+        "Upload": "అప్‌లోడ్",
+        "Get close": "దగ్గరగా తీయండి",
+        "Keep one leaf large in the frame.": "ఒక ఆకు ఫ్రేమ్‌లో పెద్దగా కనిపించేలా ఉంచండి.",
+        "Use daylight": "పగటి కాంతిని ఉపయోగించండి",
+        "Avoid strong shadows and glare.": "తీవ్రమైన నీడలు, కాంతి మెరుపులను నివారించండి.",
+        "Keep it steady": "కెమెరాను స్థిరంగా ఉంచండి",
+        "Keep the leaf details sharp.": "ఆకులోని వివరాలు స్పష్టంగా ఉండేలా చూడండి.",
         "Noticed something unusual on a leaf? Add a photo and we’ll help you explore what might be happening, with practical next steps.": "ఆకుపై ఏదైనా అసాధారణంగా కనిపిస్తుందా? ఫోటోను జోడించండి. సాధ్యమైన సమస్యను అర్థం చేసుకోవడానికి సహాయం పొందండి.",
         "For the clearest result, photograph one leaf in natural light and get close enough to see the details.": "మంచి ఫలితం కోసం సహజ కాంతిలో ఒక ఆకును దగ్గరగా, స్పష్టంగా ఫోటో తీయండి.",
         "JPG or PNG. A close, focused photo works best.": "JPG లేదా PNG. దగ్గరగా, స్పష్టంగా తీసిన ఫోటో ఉత్తమం.",
@@ -595,7 +608,7 @@ def main():
         st.caption(tr("JPG or PNG · Clear, well-lit leaf photos work best"))
     with right:
         st.markdown(
-            """
+            f"""
             <div class="example-card">
               <div class="guide-visual">
                 <svg viewBox="0 0 520 300" role="img" aria-label="Leaf photo framing guide showing one leaf in focus, daylight and a clear close-up" style="display:block;width:100%;height:auto;">
@@ -626,17 +639,17 @@ def main():
                   <rect x="18" y="18" width="116" height="38" rx="19" fill="#fffefa" opacity=".96"/>
                   <circle cx="38" cy="37" r="8" fill="#426747"/>
                   <path d="M34 37L37 40L43 33" fill="none" stroke="#fffefa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <text x="53" y="42" font-size="12" font-family="Arial, sans-serif" font-weight="700" fill="#315b3b">ఫోకస్‌లో ఉంది</text>
+                  <text x="53" y="42" font-size="12" font-family="Arial, sans-serif" font-weight="700" fill="#315b3b">{tr("In focus")}</text>
                   <rect x="18" y="246" width="146" height="36" rx="18" fill="#fffefa" opacity=".96"/>
                   <circle cx="38" cy="264" r="8" fill="#e8bb56"/>
-                  <text x="53" y="269" font-size="12" font-family="Arial, sans-serif" font-weight="700" fill="#315b3b">సహజ పగటి వెలుతురు</text>
+                  <text x="53" y="269" font-size="12" font-family="Arial, sans-serif" font-weight="700" fill="#315b3b">{tr("Natural daylight")}</text>
                   <rect x="344" y="235" width="158" height="42" rx="10" fill="#fffefa" opacity=".96"/>
-                  <text x="358" y="252" font-size="11" font-family="Arial, sans-serif" font-weight="700" fill="#315b3b">ఒక ఆకు, దగ్గరి దృశ్యం</text>
-                  <text x="358" y="266" font-size="10" font-family="Arial, sans-serif" fill="#586458">మచ్చలు, అంచులు కనిపించాలి</text>
+                  <text x="358" y="252" font-size="11" font-family="Arial, sans-serif" font-weight="700" fill="#315b3b">{tr("One leaf, close-up")}</text>
+                  <text x="358" y="266" font-size="10" font-family="Arial, sans-serif" fill="#586458">{tr("Show spots and edges")}</text>
                 </svg>
               </div>
-              <div class="guide-heading">ఆకు ఫోటోను సరిగ్గా ఎలా తీయాలి</div>
-              <div class="guide-subtitle">ప్రభావిత భాగం స్పష్టంగా కనిపించేలా ఒక ఆకును ఫ్రేమ్‌లో నింపండి.</div>
+              <div class="guide-heading">{tr("How to take a useful leaf photo")}</div>
+              <div class="guide-subtitle">{tr("Fill the frame with one leaf so the affected area is easy to see.")}</div>
               <div class="guide-examples">
                 <div class="guide-example">
                   <strong>{tr("✓ Good photo")}</strong>
@@ -664,9 +677,9 @@ def main():
     if uploaded_file is None:
         st.markdown("#### " + tr("A few tips before you take the photo"))
         tip1, tip2, tip3 = st.columns(3)
-        tip1.markdown("**Get close**  \nKeep one leaf large in the frame.")
-        tip2.markdown("**Use daylight**  \nAvoid strong shadows and glare.")
-        tip3.markdown("**Keep it steady**  \nKeep the leaf details sharp.")
+        tip1.markdown("**{tr("Get close")}**  \n{tr("Keep one leaf large in the frame.")}")
+        tip2.markdown("**{tr("Use daylight")}**  \n{tr("Avoid strong shadows and glare.")}")
+        tip3.markdown("**{tr("Keep it steady")}**  \n{tr("Keep the leaf details sharp.")}")
         st.caption(tr("Your photo is checked for basic quality before the disease classifier runs."))
         return
 
