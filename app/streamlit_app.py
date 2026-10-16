@@ -6,7 +6,7 @@ from datetime import datetime
 
 import streamlit as st
 import torch
-from PIL import Image, ImageFilter, ImageStat
+from PIL import Image, ImageFilter, ImageStat, ImageOps
 from transformers import CLIPModel, CLIPProcessor
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
@@ -202,6 +202,15 @@ def image_quality_checks(image):
             "This image has low resolution. Try a larger, clearer photograph."
         )
 
+    # Unusual framing can mean the leaf is too small in the frame. Rotation
+    # itself is not proof of poor quality; EXIF orientation is normalized below.
+    aspect_ratio = max(width, height) / max(1, min(width, height))
+    if aspect_ratio > 2.4:
+        warnings.append(
+            "The framing is unusually wide or tall. Reframe one leaf so it fills "
+            "more of the image if possible."
+        )
+
     gray = image.convert("L")
     edge_image = gray.filter(ImageFilter.FIND_EDGES)
     edge_variance = ImageStat.Stat(edge_image).var[0]
@@ -212,6 +221,31 @@ def image_quality_checks(image):
             "The image may be blurry or lack detail. Try taking a sharper photo "
             "with the leaf in focus."
         )
+
+    # Approximate clutter warning: compare edge activity near the image border
+    # with the center. This is a heuristic, not a validated segmentation model.
+    border = max(1, min(width, height) // 10)
+    if width > 2 * border and height > 2 * border:
+        border_mask = Image.new("L", gray.size, 0)
+        from PIL import ImageDraw
+        draw = ImageDraw.Draw(border_mask)
+        draw.rectangle((0, 0, width - 1, border), fill=255)
+        draw.rectangle((0, height - border, width - 1, height - 1), fill=255)
+        draw.rectangle((0, 0, border, height - 1), fill=255)
+        draw.rectangle((width - border, 0, width - 1, height - 1), fill=255)
+        edge_gray = gray.filter(ImageFilter.FIND_EDGES)
+        border_pixels = [
+            pixel for pixel, mask in zip(edge_gray.getdata(), border_mask.getdata()) if mask
+        ]
+        center = gray.crop((width // 4, height // 4, 3 * width // 4, 3 * height // 4))
+        center_edges = center.filter(ImageFilter.FIND_EDGES)
+        border_activity = sum(border_pixels) / max(1, len(border_pixels))
+        center_activity = ImageStat.Stat(center_edges).mean[0]
+        if border_activity > max(45, center_activity * 1.8):
+            warnings.append(
+                "The background may be visually busy. Move closer to one leaf and "
+                "use a simpler background if possible."
+            )
 
     brightness = ImageStat.Stat(gray).mean[0]
 
@@ -269,7 +303,7 @@ def main():
         return
 
     try:
-        image = Image.open(uploaded_file).convert("RGB")
+        image = ImageOps.exif_transpose(Image.open(uploaded_file)).convert("RGB")
     except Exception:
         st.error("This image could not be opened. Please upload a valid JPG or PNG.")
         return
@@ -306,6 +340,16 @@ def main():
                 "a photograph of a plant with visible leaves",
             }
 
+            # This relative CLIP score is a conservative screening heuristic,
+            # not a calibrated probability of plant identity.
+            if plant_score < 0.30:
+                st.error(
+                    "The image is too ambiguous for a responsible prediction. "
+                    "Please upload a clearer, well-lit photo focused on one leaf."
+                )
+                st.info("Disease prediction was not run because plant-image confidence was low.")
+                return
+
             if best_description not in plant_descriptions:
                 st.error(
                     "This image may not be a plant or leaf photo. "
@@ -315,6 +359,23 @@ def main():
                     "The disease classifier was not run because the image "
                     "validator did not select a plant description."
                 )
+                return
+
+            severe_quality_terms = (
+                "low resolution",
+                "very dark",
+                "overexposed",
+                "blurry or lack detail",
+            )
+            if any(
+                any(term in warning.lower() for term in severe_quality_terms)
+                for warning in quality_warnings
+            ):
+                st.error(
+                    "This image may be too degraded for a reliable prediction. "
+                    "Please upload a sharper, properly lit image with the leaf in focus."
+                )
+                st.info("Disease prediction was not run. Improve the image and try again.")
                 return
 
             image_tensor = transform(image).unsqueeze(0).to(device)
