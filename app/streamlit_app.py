@@ -841,8 +841,12 @@ def main():
                     "be wrong, so compare it with visible symptoms."
                 )
             st.markdown(f"### {display_name}")
-            st.write(f"**Plant:** {plant}")
-            st.write(f"**Possible condition:** {disease}")
+            if crop_was_user_selected:
+                st.write(f"**Crop selected by you:** {crop_choice}")
+                st.write(f"**Predicted condition within {crop_choice}:** {disease}")
+            else:
+                st.write(f"**Plant:** {plant}")
+                st.write(f"**Possible condition:** {disease}")
             st.metric(
                 "Within-crop condition score" if crop_was_user_selected else "Model confidence score",
                 f"{top_prob:.2%}",
