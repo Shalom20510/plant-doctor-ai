@@ -582,14 +582,14 @@ def main():
     with left:
         st.markdown("## " + tr("What's happening to your plant?"))
         st.markdown(
-            '<p class="plant-intro">{tr("Noticed something unusual on a leaf? Add a photo and we’ll help you explore what might be happening, with practical next steps.")}</p>',
+            f'<p class="plant-intro">{tr("Noticed something unusual on a leaf? Add a photo and we’ll help you explore what might be happening, with practical next steps.")}</p>',
             unsafe_allow_html=True,
         )
-        st.markdown('<div class="plant-note">{tr("For the clearest result, photograph one leaf in natural light and get close enough to see the details.")}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="plant-note">{tr("For the clearest result, photograph one leaf in natural light and get close enough to see the details.")}</div>', unsafe_allow_html=True)
         uploaded_file = st.file_uploader(
-            "Choose a leaf photo",
+            tr("Choose a leaf photo"),
             type=["jpg", "jpeg", "png"],
-            help="{tr("JPG or PNG. A close, focused photo works best.")}",
+            help=tr("JPG or PNG. A close, focused photo works best."),
             label_visibility="visible",
         )
         st.caption(tr("JPG or PNG · Clear, well-lit leaf photos work best"))
@@ -626,13 +626,13 @@ def main():
                   <rect x="18" y="18" width="116" height="38" rx="19" fill="#fffefa" opacity=".96"/>
                   <circle cx="38" cy="37" r="8" fill="#426747"/>
                   <path d="M34 37L37 40L43 33" fill="none" stroke="#fffefa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <text x="53" y="42" font-size="12" font-family="Arial, sans-serif" font-weight="700" fill="#315b3b">In focus</text>
+                  <text x="53" y="42" font-size="12" font-family="Arial, sans-serif" font-weight="700" fill="#315b3b">ఫోకస్‌లో ఉంది</text>
                   <rect x="18" y="246" width="146" height="36" rx="18" fill="#fffefa" opacity=".96"/>
                   <circle cx="38" cy="264" r="8" fill="#e8bb56"/>
-                  <text x="53" y="269" font-size="12" font-family="Arial, sans-serif" font-weight="700" fill="#315b3b">Natural daylight</text>
+                  <text x="53" y="269" font-size="12" font-family="Arial, sans-serif" font-weight="700" fill="#315b3b">సహజ పగటి వెలుతురు</text>
                   <rect x="344" y="235" width="158" height="42" rx="10" fill="#fffefa" opacity=".96"/>
-                  <text x="358" y="252" font-size="11" font-family="Arial, sans-serif" font-weight="700" fill="#315b3b">One leaf, close-up</text>
-                  <text x="358" y="266" font-size="10" font-family="Arial, sans-serif" fill="#586458">Show spots and edges</text>
+                  <text x="358" y="252" font-size="11" font-family="Arial, sans-serif" font-weight="700" fill="#315b3b">ఒక ఆకు, దగ్గరి దృశ్యం</text>
+                  <text x="358" y="266" font-size="10" font-family="Arial, sans-serif" fill="#586458">మచ్చలు, అంచులు కనిపించాలి</text>
                 </svg>
               </div>
               <div class="guide-heading">{tr("How to take a useful leaf photo")}</div>
