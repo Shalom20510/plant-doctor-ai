@@ -14,8 +14,9 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
 from src.input_validation import (
-    AMBIGUOUS_PROMPT, NON_LEAF_PROMPTS, SUPPORTED_PROMPTS,
-    UNSUPPORTED_LEAF_PROMPT, decide_input_scope,
+    CROP_PROMPT_VARIANTS, NON_LEAF_PROMPTS, SUPPORTED_CROP_NAMES,
+    SUPPORTED_PROMPTS, UNSUPPORTED_LEAF_PROMPTS, decide_input_scope,
+    crop_name_from_prompt, normalize_crop_name,
 )
 
 LOG_FILE = ROOT_DIR / "logs" / "predictions.log"
@@ -48,38 +49,51 @@ def load_clip_validator():
 
 
 def validate_plant_image(image):
-    """Use grouped CLIP logits to screen supported crops, unsupported leaves and non-leaf inputs."""
+    """Screen inputs using averaged multi-template CLIP scores per crop."""
     processor, model = load_clip_validator()
-    descriptions = list(SUPPORTED_PROMPTS) + [
-        UNSUPPORTED_LEAF_PROMPT,
-        *NON_LEAF_PROMPTS,
+
+    crop_prompt_pairs = [
+        (crop, prompt)
+        for crop in SUPPORTED_CROP_NAMES
+        for prompt in CROP_PROMPT_VARIANTS[crop]
     ]
+    crop_descriptions = [prompt for _, prompt in crop_prompt_pairs]
+    descriptions = crop_descriptions + list(UNSUPPORTED_LEAF_PROMPTS) + list(NON_LEAF_PROMPTS)
     inputs = processor(text=descriptions, images=image, return_tensors="pt", padding=True)
+
     with torch.no_grad():
         outputs = model(**inputs)
         logits = outputs.logits_per_image[0]
 
-    supported_count = len(SUPPORTED_PROMPTS)
-    unsupported_index = supported_count
-    nonleaf_start = unsupported_index + 1
+    # Average several distinct descriptions for each crop, reducing reliance
+    # on a single prompt's wording. The crop-specific morphology description is
+    # only one prompt among several; this is still a heuristic CLIP screen.
+    crop_logits = []
+    offset = 0
+    for crop in SUPPORTED_CROP_NAMES:
+        prompt_count = len(CROP_PROMPT_VARIANTS[crop])
+        crop_logits.append(logits[offset:offset + prompt_count].mean())
+        offset += prompt_count
+    crop_logits = torch.stack(crop_logits)
+    supported_local_index = int(crop_logits.argmax().item())
+    best_supported_logit = crop_logits[supported_local_index]
 
-    # Do not let a generic "ambiguous image" prompt compete with the actual
-    # subject categories: it can incorrectly win for clear non-leaf photos.
-    # Compare the best supported-crop prompt, unsupported-leaf prompt, and
-    # non-leaf prompt as three mutually competing groups.
-    supported_local_index = int(logits[:supported_count].argmax().item())
+    unsupported_start = len(crop_descriptions)
+    nonleaf_start = unsupported_start + len(UNSUPPORTED_LEAF_PROMPTS)
+    unsupported_logit = logits[unsupported_start:nonleaf_start].mean()
     nonleaf_logits = logits[nonleaf_start:]
     group_logits = torch.stack([
-        logits[supported_local_index],
-        logits[unsupported_index],
+        best_supported_logit,
+        unsupported_logit,
         nonleaf_logits.max(),
     ])
     group_scores = group_logits.softmax(dim=0)
     group_index = int(group_scores.argmax().item())
+
     if group_index == 0:
         best_description = SUPPORTED_PROMPTS[supported_local_index]
     elif group_index == 1:
-        best_description = UNSUPPORTED_LEAF_PROMPT
+        best_description = UNSUPPORTED_LEAF_PROMPTS[0]
     else:
         nonleaf_local_index = int(nonleaf_logits.argmax().item())
         best_description = NON_LEAF_PROMPTS[nonleaf_local_index]
@@ -696,19 +710,11 @@ def main():
         # the disease classifier. This is a conservative heuristic, not proof
         # that either model identified the plant correctly.
         if best_description in SUPPORTED_PROMPTS:
-            clip_crop = best_description.split(" photograph of a ", 1)[-1].split(
-                " leaf", 1
-            )[0].strip().lower()
-            def normalize_crop_name(value):
-                normalized = " ".join(value.lower().replace("_", " ").replace(",", " ").split())
-                aliases = {
-                    "pepper bell": "bell pepper",
-                    "corn maize": "corn",
-                    "cherry including sour": "cherry",
-                }
-                return aliases.get(normalized, normalized)
-
-            if normalize_crop_name(clip_crop) != normalize_crop_name(plant):
+            clip_crop = crop_name_from_prompt(best_description)
+            if (
+                clip_crop is not None
+                and normalize_crop_name(clip_crop) != normalize_crop_name(plant)
+            ):
                 log_prediction(
                     model_version,
                     uploaded_file.name,
