@@ -1,21 +1,64 @@
-"""Heuristic input-scope decisions for the Plant Doctor demo.
+"""Heuristic input-scope and crop-label helpers for Plant Doctor AI.
 
-These rules interpret CLIP prompt scores; they are not calibrated probabilities.
+CLIP prompt scores are relative similarities, not calibrated probabilities.
 """
 from __future__ import annotations
 
-SUPPORTED_CROPS = (
+SUPPORTED_CROP_NAMES = (
     "apple", "blueberry", "cherry", "corn", "grape", "orange", "peach",
     "bell pepper", "potato", "raspberry", "soybean", "squash", "strawberry",
     "tomato",
 )
 
+# One canonical prompt per model crop is retained for readable results and
+# compatibility with the simple scope decision function.
 SUPPORTED_PROMPTS = tuple(
     f"a close-up photograph of a {crop} leaf showing its surface and possible spots"
-    for crop in SUPPORTED_CROPS
+    for crop in SUPPORTED_CROP_NAMES
 )
+
+# Diverse wording reduces dependence on any single CLIP sentence template.
+# A crop-specific morphology prompt is included as one vote, not treated as
+# ground truth. These descriptions are heuristics and need labeled image tests.
+CROP_MORPHOLOGY_PROMPTS = {
+    "apple": "a broad oval apple-tree leaf with a finely serrated edge",
+    "blueberry": "a small oval blueberry-bush leaf with a fine toothed edge",
+    "cherry": "an oval cherry-tree leaf with a pointed tip and serrated edges",
+    "corn": "a long narrow blade-like leaf of a corn maize plant",
+    "grape": "a broad lobed grapevine leaf with radiating palmate veins",
+    "orange": "a smooth oval citrus leaf from an orange tree",
+    "peach": "a long narrow lance-shaped pointed leaf of a peach tree",
+    "bell pepper": "a smooth broad pointed oval leaf of a bell pepper plant",
+    "potato": "a compound potato-plant leaf with several oval leaflets",
+    "raspberry": "a compound raspberry leaf with toothed oval leaflets",
+    "soybean": "a soybean leaf with three broad oval leaflets",
+    "squash": "a large broad lobed leaf from a squash plant",
+    "strawberry": "a strawberry leaf with three toothed leaflets",
+    "tomato": "a compound tomato leaf with multiple irregular deeply serrated leaflets",
+}
+
+_GENERIC_CROP_TEMPLATES = (
+    "a close-up photograph of a {crop} leaf",
+    "a photograph of the leaf of a {crop} plant",
+    "one {crop} leaf filling the frame, showing its edges and veins",
+    "a {crop} leaf being checked for plant disease",
+)
+
+CROP_PROMPT_VARIANTS = {
+    crop: tuple(
+        template.format(crop=crop)
+        for template in _GENERIC_CROP_TEMPLATES
+    ) + (CROP_MORPHOLOGY_PROMPTS[crop],)
+    for crop in SUPPORTED_CROP_NAMES
+}
+
 UNSUPPORTED_LEAF_PROMPT = (
     "a close-up photograph of a leaf from an unsupported plant species"
+)
+UNSUPPORTED_LEAF_PROMPTS = (
+    UNSUPPORTED_LEAF_PROMPT,
+    "a leaf from a plant species not included in the supported crop list",
+    "a close-up of an unknown garden plant leaf",
 )
 AMBIGUOUS_PROMPT = "an unclear, blurry, or ambiguous photograph"
 NON_LEAF_PROMPTS = (
@@ -30,6 +73,30 @@ NON_LEAF_PROMPTS = (
 SCOPE_THRESHOLD = 0.28
 
 
+def normalize_crop_name(value: str) -> str:
+    """Normalize crop aliases used by CLIP prompts and checkpoint class labels."""
+    normalized = " ".join(
+        value.lower().replace("_", " ").replace(",", " ").replace("(", " ").replace(")", " ").split()
+    )
+    aliases = {
+        "pepper bell": "bell pepper",
+        "corn maize": "corn",
+        "cherry including sour": "cherry",
+    }
+    return aliases.get(normalized, normalized)
+
+
+def crop_name_from_prompt(prompt: str) -> str | None:
+    """Return the canonical crop name associated with a known CLIP prompt."""
+    for crop, prompts in CROP_PROMPT_VARIANTS.items():
+        if prompt in prompts:
+            return crop
+    for crop, canonical in zip(SUPPORTED_CROP_NAMES, SUPPORTED_PROMPTS):
+        if prompt == canonical:
+            return crop
+    return None
+
+
 def decide_input_scope(
     best_description: str,
     supported_score: float,
@@ -38,8 +105,8 @@ def decide_input_scope(
 ) -> dict[str, str | bool | float]:
     """Decide whether to continue to disease classification.
 
-    supported_score is the sum of CLIP softmax scores for supported crop prompts.
-    It is a relative heuristic, not a calibrated probability.
+    supported_score and best_score are relative CLIP group softmax scores,
+    not calibrated probabilities of plant identity or diagnosis.
     """
     if not 0.0 <= supported_score <= 1.0:
         raise ValueError("supported_score must be between 0 and 1")
