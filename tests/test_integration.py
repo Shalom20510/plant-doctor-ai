@@ -128,3 +128,46 @@ def test_checkpoint_class_order_mismatch_is_rejected(
 
     with pytest.raises(ValueError, match="outputs 2 classes but 1 labels"):
         model_module.load_model(checkpoint, "cpu")
+
+
+def test_crop_conditioned_prediction_excludes_other_plant_classes() -> None:
+    class FixedLogitModel(nn.Module):
+        def forward(self, batch: torch.Tensor) -> torch.Tensor:
+            # Bell Pepper wins globally, while Tomato healthy is best among
+            # Tomato-only classes. The crop-conditioned helper must not return
+            # a Bell Pepper label when the user explicitly selected Tomato.
+            return torch.tensor([[12.0, 2.0, 4.0, 1.0]])
+
+    idx_to_class = {
+        0: "Pepper,_bell___healthy",
+        1: "Tomato___Bacterial_spot",
+        2: "Tomato___healthy",
+        3: "Apple___healthy",
+    }
+    result = predict_module.predict_topk_for_crop(
+        model=FixedLogitModel(),
+        image_tensor=torch.zeros((1, 3, 224, 224)),
+        idx_to_class=idx_to_class,
+        device="cpu",
+        crop_name="Tomato",
+        top_k=3,
+    )
+
+    assert result[0][0] == "Tomato___healthy"
+    assert all(label.startswith("Tomato___") for label, _ in result)
+    assert 0.0 <= result[0][1] <= 1.0
+
+
+def test_crop_conditioned_prediction_rejects_unknown_crop() -> None:
+    class FixedLogitModel(nn.Module):
+        def forward(self, batch: torch.Tensor) -> torch.Tensor:
+            return torch.tensor([[1.0, 2.0]])
+
+    with pytest.raises(ValueError, match="No model classes are available"):
+        predict_module.predict_topk_for_crop(
+            model=FixedLogitModel(),
+            image_tensor=torch.zeros((1, 3, 224, 224)),
+            idx_to_class={0: "Apple___healthy", 1: "Tomato___healthy"},
+            device="cpu",
+            crop_name="Mango",
+        )
