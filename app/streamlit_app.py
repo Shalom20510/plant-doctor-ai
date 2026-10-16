@@ -9,6 +9,11 @@ import torch
 from PIL import Image, ImageFilter, ImageStat, ImageOps
 from transformers import CLIPModel, CLIPProcessor
 
+from src.input_validation import (
+    AMBIGUOUS_PROMPT, NON_LEAF_PROMPTS, SUPPORTED_PROMPTS,
+    UNSUPPORTED_LEAF_PROMPT, decide_input_scope,
+)
+
 ROOT_DIR = Path(__file__).resolve().parents[1]
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
@@ -43,26 +48,14 @@ def load_clip_validator():
 
 
 def validate_plant_image(image):
+    """Use CLIP as a heuristic screen for the model's supported crop categories."""
     processor, model = load_clip_validator()
-
-    descriptions = [
-        "a close-up photograph of a plant leaf",
-        "a photograph of a plant with visible leaves",
-        "a photograph of people",
-        "a photograph of a building",
-        "a photograph of a vehicle",
-        "a photograph of food",
-        "a photograph of an animal",
-        "a photograph of an unrelated object",
+    descriptions = list(SUPPORTED_PROMPTS) + [
+        UNSUPPORTED_LEAF_PROMPT,
+        *NON_LEAF_PROMPTS,
+        AMBIGUOUS_PROMPT,
     ]
-
-    inputs = processor(
-        text=descriptions,
-        images=image,
-        return_tensors="pt",
-        padding=True,
-    )
-
+    inputs = processor(text=descriptions, images=image, return_tensors="pt", padding=True)
     with torch.no_grad():
         outputs = model(**inputs)
         scores = outputs.logits_per_image.softmax(dim=1)[0]
@@ -70,11 +63,8 @@ def validate_plant_image(image):
     best_index = int(scores.argmax().item())
     best_description = descriptions[best_index]
     best_score = float(scores[best_index].item())
-
-    plant_indices = [0, 1]
-    plant_score = sum(float(scores[i].item()) for i in plant_indices)
-
-    return best_description, best_score, plant_score
+    supported_score = sum(float(scores[i].item()) for i in range(len(SUPPORTED_PROMPTS)))
+    return best_description, best_score, supported_score
 
 
 
@@ -617,40 +607,31 @@ def main():
         
         with st.spinner("Checking image and analyzing the leaf..."):
             try:
-                best_description, best_score, plant_score = validate_plant_image(image)
+                best_description, best_score, supported_score = validate_plant_image(image)
             except Exception as error:
                 st.error(f"Image validation failed: {error}")
                 st.info("Please try again. Disease prediction was not run.")
                 return
 
+            scope = decide_input_scope(best_description, supported_score, best_score)
             st.caption(
-                f"Image validator: {best_description} "
-                f"(relative score: {best_score:.1%})"
+                f"Input scope check: {scope['status'].replace('_', ' ').title()} "
+                f"(best prompt score: {best_score:.1%}; supported-crop score sum: {supported_score:.1%})."
             )
-
-            plant_descriptions = {
-                "a close-up photograph of a plant leaf",
-                "a photograph of a plant with visible leaves",
-            }
-
-            # This relative CLIP score is a conservative screening heuristic,
-            # not a calibrated probability of plant identity.
-            if plant_score < 0.30:
-                st.error(
-                    "The image is too ambiguous for a responsible prediction. "
-                    "Please upload a clearer, well-lit photo focused on one leaf."
-                )
-                st.info("Disease prediction was not run because plant-image confidence was low.")
-                return
-
-            if best_description not in plant_descriptions:
-                st.error(
-                    "This image may not be a plant or leaf photo. "
-                    "Please upload a clear image focused on one plant leaf."
+            st.caption(
+                "These are relative CLIP scores, not calibrated probabilities. "
+                "The scope check can accept or reject images incorrectly."
+            )
+            if not scope["accepted"]:
+                st.warning(f"Inconclusive / unsupported input: {scope['reason']}")
+                log_prediction(
+                    model_version, uploaded_file.name, "NO_PREDICTION",
+                    float(best_score), f"REJECTED_{str(scope['status']).upper()}",
                 )
                 st.info(
-                    "The disease classifier was not run because the image "
-                    "validator did not select a plant description."
+                    "Supported crops represented in this model: apple, blueberry, cherry, corn, "
+                    "grape, orange, peach, bell pepper, potato, raspberry, soybean, squash, "
+                    "strawberry, and tomato."
                 )
                 return
 
@@ -690,15 +671,30 @@ def main():
         plant, disease, display_name = readable_name(top_label)
 
         low_confidence = top_prob < LOW_CONFIDENCE_THRESHOLD
-        status = "LOW_CONFIDENCE" if low_confidence else "MODEL_PREDICTION"
+        if low_confidence:
+            log_prediction(
+                model_version, uploaded_file.name, top_label, top_prob,
+                "REJECTED_LOW_CONFIDENCE",
+            )
+            st.divider()
+            st.warning(
+                f"Inconclusive result: the top model score is {top_prob:.1%}, below "
+                f"the configured {LOW_CONFIDENCE_THRESHOLD:.0%} threshold. "
+                "No disease diagnosis is being reported."
+            )
+            st.write("Closest model categories (not diagnoses):")
+            for label, probability in predictions:
+                _, _, name = readable_name(label)
+                st.write(f"- {name}: {probability:.1%}")
+            st.caption(
+                "Softmax scores can be overconfident and are not calibrated probabilities. "
+                "This threshold is a demo rejection rule, not a clinically or agriculturally "
+                "validated guarantee. Try a clear, well-lit photo of one supported crop leaf."
+            )
+            return
 
-        log_prediction(
-            model_version,
-            uploaded_file.name,
-            top_label,
-            top_prob,
-            status,
-        )
+        status = "MODEL_PREDICTION"
+        log_prediction(model_version, uploaded_file.name, top_label, top_prob, status)
 
         st.divider()
         st.markdown("## What we noticed")
@@ -707,10 +703,7 @@ def main():
             st.image(image, width="stretch")
             st.caption("Your uploaded leaf")
         with result_text:
-            if low_confidence:
-                st.warning("The model is unsure about this photo. Treat this as a starting point, not a diagnosis.")
-            else:
-                st.info("Here’s the model’s closest match. It may still be wrong, so compare it with the symptoms you can see.")
+            st.info("Here’s the model’s closest match for a supported crop. It may still be wrong, so compare it with visible symptoms.")
             st.markdown(f"### {display_name}")
             st.write(f"**Plant:** {plant}")
             st.write(f"**Possible condition:** {disease}")
