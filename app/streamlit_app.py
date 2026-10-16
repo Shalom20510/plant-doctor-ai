@@ -630,27 +630,37 @@ def main():
     else:
         st.caption("No obvious image-quality issue detected by the basic checks.")
 
-    AUTO_CROP_OPTION = "Automatic (recommended)"
-    crop_options = [AUTO_CROP_OPTION] + [crop.title() for crop in SUPPORTED_CROP_NAMES]
+    CROP_PLACEHOLDER = "Select the crop (required)"
+    crop_options = [CROP_PLACEHOLDER] + [crop.title() for crop in SUPPORTED_CROP_NAMES]
     crop_choice = st.selectbox(
-        "Do you know which crop this leaf belongs to? (optional)",
+        "Which crop is shown in your photo?",
         options=crop_options,
         index=0,
         help=(
-            "Automatic mode rejects crop mismatches. If you select a crop, "
-            "the disease classifier is restricted to that crop's classes; this "
-            "does not independently verify the plant species."
+            "The disease model confuses visually similar crops. Choose the plant "
+            "you believe this is so prediction is restricted to that crop's classes. "
+            "This selection is user-provided and does not verify plant identity."
         ),
         key="confirmed_crop_choice",
     )
-    crop_was_user_selected = crop_choice != AUTO_CROP_OPTION
+    crop_was_user_selected = crop_choice != CROP_PLACEHOLDER
     if crop_was_user_selected:
         st.caption(
-            f"Crop selected: {crop_choice}. The condition score will be calculated "
-            "only across this crop's model classes, not all 38 classes."
+            f"Selected crop: {crop_choice}. The app will only consider {crop_choice} "
+            "disease/healthy classes. The crop identity is supplied by you, not independently confirmed."
+        )
+    else:
+        st.info(
+            "Select the crop before analyzing. Automatic plant-name identification is not reliable enough "
+            "for this prototype to choose a disease category on its own."
         )
 
-    if st.button("Analyze Leaf", type="primary", width="stretch"):
+    if st.button(
+        "Analyze Leaf",
+        type="primary",
+        width="stretch",
+        disabled=not crop_was_user_selected,
+    ):
         
         with st.spinner("Checking image and analyzing the leaf..."):
             try:
