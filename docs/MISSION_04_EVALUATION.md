@@ -58,3 +58,44 @@ A successful, independently verified disease prediction on a supported crop, a r
 2. Upload a clear photo of a supported crop and show the automatic model output. State that this is a model prediction, not ground-truth validation, unless independently verified.
 3. Upload a blurry or unclear leaf and show an inconclusive result if the quality/scope checks reject it.
 4. Explain that the prototype blocks some unreliable inputs but is not yet validated for reliable field diagnosis.
+
+
+## Mission 04 submission matrix — expected vs observed
+
+| Test | Input / method | Expected result | Actual evidence currently available | Status |
+|---|---|---|---|---|
+| Test 1A — supported held-out leaf | Labeled held-out image from one of the 38 model classes | Predicted class plus confidence/uncertainty indicator | A tomato-like leaf previously produced `Bell Pepper — Healthy` at 61.58%; its true label was not independently established. This is not a verified correct prediction. | **INCOMPLETE** — run labeled evaluation |
+| Test 1B — aggregate metrics | Independent labeled held-out set | Report macro-F1 and balanced accuracy, plus sample count | `src/eval.py` reports accuracy and macro-F1 on a deterministic validation split. No generated metrics JSON is committed; the dataset is absent. | **INCOMPLETE** — run evaluation |
+| Test 2 — changed image conditions | Same held-out images with dim/bright lighting, 15°/30° rotation, Gaussian blur, and synthetic edge clutter | Compare original and transformed accuracy/macro-F1 and report degradation | `src/robustness.py` implements these transformations and writes a JSON report, but measured output is not available. | **INCOMPLETE** — run robustness evaluation |
+| Test 3A — non-leaf | Photo of people | Reject as non-leaf; do not run disease classifier | One manual photo-of-people test was rejected as **Non Leaf**; displayed CLIP category score was 99.9% (relative score, not calibrated probability). | **OBSERVED PASS** for this one image |
+| Test 3B — unsupported plant | Labeled leaf from a plant outside the supported crop groups | Unsupported/inconclusive result | No verified labeled real-photo result available. | **INCOMPLETE** |
+| Test 3C — ambiguous/heavily blurred | Blurred or unclear leaf | Ask for a clearer image or return inconclusive | Rule tests cover deterministic low-scope/ambiguity conditions; no documented measured real-photo result available. | **PARTIAL** — real-photo evidence needed |
+| Test 3D — crop disagreement | Tomato-like leaf for which CLIP and classifier predicted different crops | Return inconclusive instead of a disease diagnosis | CLIP chose Soybean while classifier chose Bell Pepper; the app rejected the disease result. | **OBSERVED PASS** for this one image |
+
+## How to generate the missing measured evidence
+
+First, place the labeled dataset in `data/plantvillage/color/<class-name>/*`. The class folder names and alphabetical order must match the checkpoint. Do not report invented metrics or use screenshots of predictions as a substitute for aggregate metrics.
+
+From the repository root on Windows, run:
+
+```cmd
+py -m pytest -q
+py -m src.eval --data_dir data/plantvillage/color --checkpoint artifacts/models/model_v1.pt
+py -m src.robustness --data_dir data/plantvillage/color --checkpoint artifacts/models/model_v1.pt --max_images 140
+```
+
+The evaluation command writes `artifacts/evaluation/evaluation_report.json`. The robustness command writes `artifacts/evaluation/robustness_report.json`. The `--max_images 140` run is a quick class-balanced stress test, not a full benchmark; remove the option for the complete dataset.
+
+**Metric interpretation:** macro-F1 is the unweighted mean of per-class F1 scores. Balanced accuracy is the mean per-class recall. The current `src/eval.py` emits accuracy and macro-F1, but not balanced accuracy; do not label accuracy as balanced accuracy. Use an independent held-out set for final claims, because a validation split used during model development is weaker evidence. Record the number of evaluated images, dataset/split, checkpoint, seed, and exact command alongside the metrics.
+
+For transformed-image robustness, report each condition's accuracy and macro-F1 beside the original condition. Accuracy degradation in percentage points is `(transformed_accuracy - original_accuracy) × 100`; negative values indicate worse performance. Synthetic transformations are stress tests, not a substitute for real field photographs.
+
+## Evidence to capture for submission
+
+1. Screenshot of a supported labeled leaf, showing the predicted class and score, with its actual dataset label recorded separately.
+2. Terminal output and the saved JSON report for macro-F1 / accuracy (and balanced accuracy if added to the evaluator).
+3. Terminal output and JSON table comparing original and transformed-image metrics.
+4. Screenshot of a non-leaf rejection and an unsupported or ambiguous/blurred input rejection.
+5. Keep failed and incorrect predictions in the report. Never describe a high confidence score as proof that a prediction is correct.
+
+**Submission honesty note:** until the dataset-backed commands have run and the generated reports have been inspected, the aggregate classification and robustness metrics remain pending. The repository contains evaluation tooling and limited manual observations, not completed quantitative validation.
