@@ -82,3 +82,28 @@ The app also screens for low resolution, blur, extreme brightness, unusual frami
 - Softmax confidence is not a guarantee that a prediction is correct.
 - Performance on controlled dataset images may not generalize to field photos, lighting changes, mixed symptoms, or unsupported plant species.
 - Confirm important crop-treatment decisions with a qualified agricultural expert.
+
+
+## Current robustness-test status (2026-10-16)
+
+Implementation is present, but measured robustness results are **pending** because the labeled PlantVillage dataset is not included in this repository and was not found in the local project folders during the latest test. Running the robustness command without that dataset correctly stops with a `FileNotFoundError`; no accuracy or macro-F1 values should be reported for transformed images until the test is actually run.
+
+### Quick verification checklist
+
+- [x] Synthetic transformations implemented: dim/bright, rotations, Gaussian blur, synthetic edge clutter.
+- [x] Streamlit image-quality heuristics and uncertainty/clearer-image handling implemented.
+- [x] Robustness evaluation script writes per-condition accuracy, macro-F1, and accuracy delta to JSON.
+- [ ] Place a compatible labeled dataset in `data/plantvillage/color/<class_name>/*`.
+- [ ] Confirm dataset class names match the checkpoint class mapping.
+- [ ] Run the robustness evaluation and retain `artifacts/evaluation/robustness_report.json`.
+- [ ] Review actual before/after metrics and document findings before making performance claims.
+
+### Run a quick evaluation
+
+From the repository root on Windows:
+
+```cmd
+py -m src.robustness --data_dir data/plantvillage/color --checkpoint artifacts/models/model_v1.pt --max_images 50
+```
+
+This is a small smoke test, not a full benchmark. Use the same labeled images for each synthetic condition, and use an independent held-out test set for final claims. Do not fabricate missing metrics. The recorded checkpoint validation metrics are not robustness results.
