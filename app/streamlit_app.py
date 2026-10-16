@@ -37,6 +37,44 @@ st.set_page_config(
 
 LOW_CONFIDENCE_THRESHOLD = 0.60
 
+LANGUAGES = {"English": "en", "తెలుగు": "te"}
+TRANSLATIONS = {
+    "en": {},
+    "te": {
+        "Language / భాష": "Language / భాష",
+        "A simple plant health check": "మొక్క ఆరోగ్యాన్ని సులభంగా పరీక్షించండి",
+        "What's happening to your plant?": "మీ మొక్కకు ఏమైంది?",
+        tr("Choose a leaf photo"): "ఆకు ఫోటోను ఎంచుకోండి",
+        "JPG or PNG · Clear, well-lit leaf photos work best": "JPG లేదా PNG · స్పష్టమైన, మంచి వెలుతురు ఉన్న ఫోటోలు ఉత్తమం",
+        "A few tips before you take the photo": "ఫోటో తీయడానికి ముందు కొన్ని సూచనలు",
+        "Your photo": "మీ ఫోటో",
+        "Before analysis": "విశ్లేషణకు ముందు",
+        "Image quality check": "చిత్ర నాణ్యత తనిఖీ",
+        "Analyze Leaf": "ఆకును విశ్లేషించండి",
+        "Inconclusive result": "నిర్ధారణకు సరిపడ సమాచారం లేదు",
+        "Your uploaded leaf": "మీరు అప్‌లోడ్ చేసిన ఆకు",
+        "What we noticed": "మేము గమనించినది",
+        "Model confidence score": "మోడల్ విశ్వాస స్కోరు",
+        "Plant Care Guidance": "మొక్క సంరక్షణ సూచనలు",
+        "Other possible matches": "ఇతర సంభావ్య సరిపోలికలు",
+        "Closest model categories (not diagnoses):": "మోడల్‌కు దగ్గరగా ఉన్న వర్గాలు (నిర్ధారణలు కావు):",
+        "These are the model's next closest classes, not confirmed diagnoses.": "ఇవి మోడల్‌కు దగ్గరగా ఉన్న ఇతర వర్గాలు మాత్రమే; నిర్ధారిత వ్యాధి నిర్ధారణలు కావు.",
+        "Please try again. Disease prediction was not run.": "మళ్లీ ప్రయత్నించండి. వ్యాధి అంచనా చేయలేదు.",
+        "Plant": "మొక్క",
+        "Possible condition": "సంభావ్య సమస్య",
+        "Classification category": "వర్గీకరణ",
+        "About this result": "ఈ ఫలితం గురించి",
+        "Symptoms to check": "పరిశీలించాల్సిన లక్షణాలు",
+        "Suggested next step": "తదుపరి సూచన",
+        "Prevention": "నివారణ",
+    },
+}
+def tr(text):
+    """Translate selected UI labels; model predictions remain unchanged."""
+    language = st.session_state.get("plant_doctor_language", "en")
+    return TRANSLATIONS.get(language, {}).get(text, text)
+
+
 @st.cache_resource
 def load_clip_validator():
     model_name = "openai/clip-vit-base-patch32"
@@ -496,6 +534,8 @@ def inject_human_ui():
     )
 
 def main():
+    language_label = st.selectbox("Language / భాష", options=list(LANGUAGES), key="plant_doctor_language_label")
+    st.session_state["plant_doctor_language"] = LANGUAGES[language_label]
     inject_human_ui()
     st.markdown('<div class="plant-brand">🌿 Plant Doctor <span style="font-weight:400;color:#687267">/ a little help for healthier plants</span></div>', unsafe_allow_html=True)
     st.divider()
@@ -506,10 +546,10 @@ def main():
         st.error(f"Could not load the model: {error}")
         st.stop()
 
-    st.markdown('<div class="plant-eyebrow">A simple plant health check</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="plant-eyebrow">{tr("A simple plant health check")}</div>', unsafe_allow_html=True)
     left, right = st.columns([1.05, 0.95], gap="large")
     with left:
-        st.markdown("## What's happening to your plant?")
+        st.markdown(f"## {tr(\"What's happening to your plant?\")}")
         st.markdown(
             '<p class="plant-intro">Noticed something unusual on a leaf? Add a photo and we’ll help you explore what might be happening, with practical next steps.</p>',
             unsafe_allow_html=True,
@@ -521,7 +561,7 @@ def main():
             help="JPG or PNG. A close, focused photo works best.",
             label_visibility="visible",
         )
-        st.caption("JPG or PNG · Clear, well-lit leaf photos work best")
+        st.caption(tr("JPG or PNG · Clear, well-lit leaf photos work best"))
     with right:
         st.markdown(
             """
@@ -591,7 +631,7 @@ def main():
 
     st.divider()
     if uploaded_file is None:
-        st.markdown("#### A few tips before you take the photo")
+        st.markdown(f"#### {tr(\"A few tips before you take the photo\")}")
         tip1, tip2, tip3 = st.columns(3)
         tip1.markdown("**Get close**  \nKeep one leaf large in the frame.")
         tip2.markdown("**Use daylight**  \nAvoid strong shadows and glare.")
@@ -607,12 +647,12 @@ def main():
         st.error("This image could not be opened. Please upload a valid JPG or PNG.")
         return
 
-    st.subheader("Your photo")
+    st.subheader(tr("Your photo"))
     photo_col, space_col = st.columns([0.72, 0.28], gap="large")
     with photo_col:
         st.image(image, width="stretch")
     with space_col:
-        st.markdown("**Before analysis**")
+        st.markdown(f"**{tr(\"Before analysis\")}**")
         st.caption("Check that the leaf is visible and the affected area is in focus.")
         st.caption("The image-quality checks below may recommend a clearer photo.")
 
@@ -624,7 +664,7 @@ def main():
         )
 
     if quality_warnings:
-        st.warning("Image quality check")
+        st.warning(tr("Image quality check"))
         for warning in quality_warnings:
             st.write(f"• {warning}")
     else:
@@ -635,14 +675,14 @@ def main():
         "the app will return an inconclusive result instead of a disease prediction."
     )
 
-    if st.button("Analyze Leaf", type="primary", width="stretch"):
+    if st.button(tr("Analyze Leaf"), type="primary", width="stretch"):
         
         with st.spinner("Checking image and analyzing the leaf..."):
             try:
                 best_description, best_score, supported_score = validate_plant_image(image)
             except Exception as error:
                 st.error(f"Image validation failed: {error}")
-                st.info("Please try again. Disease prediction was not run.")
+                st.info(tr("Please try again. Disease prediction was not run."))
                 return
 
             scope = decide_input_scope(best_description, supported_score, best_score)
@@ -719,11 +759,11 @@ def main():
                     "REJECTED_CROP_MISMATCH",
                 )
                 st.divider()
-                st.markdown("## Inconclusive result")
+                st.markdown(f"## {tr(\"Inconclusive result\")}")
                 mismatch_image, mismatch_text = st.columns([0.9, 1.1], gap="large")
                 with mismatch_image:
                     st.image(image, width="stretch")
-                    st.caption("Your uploaded leaf")
+                    st.caption(tr("Your uploaded leaf"))
                 with mismatch_text:
                     st.warning(
                         "Plant type mismatch: the image-screening model and disease "
@@ -754,7 +794,7 @@ def main():
                 f"the configured {LOW_CONFIDENCE_THRESHOLD:.0%} threshold. "
                 "No disease diagnosis is being reported."
             )
-            st.write("Closest model categories (not diagnoses):")
+            st.write(tr("Closest model categories (not diagnoses):"))
             for label, probability in predictions:
                 _, _, name = readable_name(label)
                 st.write(f"- {name}: {probability:.1%}")
@@ -768,7 +808,7 @@ def main():
         log_prediction(model_version, uploaded_file.name, top_label, top_prob, "MODEL_PREDICTION")
 
         st.divider()
-        st.markdown("## What we noticed")
+        st.markdown(f"## {tr(\"What we noticed\")}")
         result_image, result_text = st.columns([0.9, 1.1], gap="large")
         with result_image:
             st.image(image, width="stretch")
@@ -781,7 +821,7 @@ def main():
             st.markdown(f"### {display_name}")
             st.write(f"**Plant:** {plant}")
             st.write(f"**Possible condition:** {disease}")
-            st.metric("Model confidence score", f"{top_prob:.2%}")
+            st.metric(tr("Model confidence score"), f"{top_prob:.2%}")
 
         st.caption(
             "This score is derived from the model's output. It is not a verified "
@@ -796,7 +836,7 @@ def main():
             )
 
         st.divider()
-        st.subheader("Plant Care Guidance")
+        st.subheader(tr("Plant Care Guidance"))
 
         guidance = disease_guidance(top_label)
 
@@ -813,8 +853,8 @@ def main():
         )
 
         st.divider()
-        st.subheader("Other possible matches")
-        st.caption("These are the model's next closest classes, not confirmed diagnoses.")
+        st.subheader(tr("Other possible matches"))
+        st.caption(tr("These are the model's next closest classes, not confirmed diagnoses."))
         for rank, (label, probability) in enumerate(predictions, start=1):
             _, _, name = readable_name(label)
             if rank == 1:
