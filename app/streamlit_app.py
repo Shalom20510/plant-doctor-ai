@@ -682,6 +682,18 @@ def main():
                 )
                 return
 
+            if crop_was_user_selected and best_description in SUPPORTED_PROMPTS:
+                screened_crop = crop_name_from_prompt(best_description)
+                if (
+                    screened_crop is not None
+                    and normalize_crop_name(screened_crop) != normalize_crop_name(crop_choice)
+                ):
+                    st.warning(
+                        f"Automatic crop screening's top candidate is {screened_crop.title()}, "
+                        f"but you selected {crop_choice}. The condition model will use only "
+                        f"{crop_choice} classes. Please verify the plant type before relying on the result."
+                    )
+
             severe_quality_terms = (
                 "low resolution",
                 "very dark",
