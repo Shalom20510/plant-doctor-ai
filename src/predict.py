@@ -5,17 +5,89 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, BinaryIO
 
+import json
 import torch
 from PIL import Image, UnidentifiedImageError
 from torchvision import transforms
 
-from src.model import load_model
+from src.model import load_model as load_checkpoint_model
 
 
 IMAGE_SIZE = 224
 IMAGENET_MEAN = (0.485, 0.456, 0.406)
 IMAGENET_STD = (0.229, 0.224, 0.225)
 SUPPORTED_EXTENSIONS = {".jpg", ".jpeg", ".png"}
+
+def get_device() -> torch.device:
+    """Return the preferred inference device."""
+    return torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+
+def load_class_mapping(path: str | Path) -> tuple[dict[str, int], dict[int, str]]:
+    """Load the saved class-to-index mapping and its inverse."""
+    mapping_path = Path(path)
+    if not mapping_path.is_file():
+        raise FileNotFoundError(f"Class mapping not found: {mapping_path}")
+    with mapping_path.open("r", encoding="utf-8") as file:
+        class_to_idx = json.load(file)
+    if not isinstance(class_to_idx, dict) or not class_to_idx:
+        raise ValueError("Class mapping must be a non-empty JSON object.")
+    normalized = {str(name): int(index) for name, index in class_to_idx.items()}
+    if sorted(normalized.values()) != list(range(len(normalized))):
+        raise ValueError("Class mapping indices must be contiguous from zero.")
+    return normalized, {index: name for name, index in normalized.items()}
+
+
+def get_inference_transform(img_size: int = IMAGE_SIZE):
+    """Build the same deterministic preprocessing transform used at inference."""
+    return transforms.Compose(
+        [
+            transforms.Resize((img_size, img_size)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
+        ]
+    )
+
+
+def load_model(
+    weights_path: str | Path,
+    num_classes: int | None = None,
+    device: str | torch.device | None = None,
+):
+    """Backward-compatible app wrapper around the canonical checkpoint loader."""
+    model, class_names, selected_device = load_checkpoint_model(weights_path, device)
+    if num_classes is not None and len(class_names) != num_classes:
+        raise ValueError(
+            f"Checkpoint has {len(class_names)} classes, but the class map has {num_classes}."
+        )
+    return model
+
+
+def predict_topk(
+    model: torch.nn.Module,
+    image_tensor: torch.Tensor,
+    idx_to_class: dict[int, str],
+    device: str | torch.device,
+    top_k: int = 5,
+) -> list[tuple[str, float]]:
+    """Return top-k (label, softmax score) pairs for a preprocessed image tensor."""
+    if top_k < 1:
+        raise ValueError("top_k must be at least 1.")
+    model.eval()
+    with torch.inference_mode():
+        logits = model(image_tensor.to(device))
+        if logits.ndim != 2 or logits.shape[0] != 1:
+            raise RuntimeError("Model returned an unexpected output shape.")
+        probabilities = torch.softmax(logits[0], dim=0)
+        count = min(top_k, probabilities.numel())
+        scores, indices = torch.topk(probabilities, k=count)
+    predictions = []
+    for score, index in zip(scores.cpu().tolist(), indices.cpu().tolist()):
+        if index not in idx_to_class:
+            raise ValueError(f"Predicted class index {index} is missing from the class map.")
+        predictions.append((idx_to_class[index], float(score)))
+    return predictions
+
 
 
 def preprocess_image(image: Image.Image) -> torch.Tensor:
