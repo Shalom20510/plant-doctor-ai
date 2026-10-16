@@ -1,0 +1,18 @@
+# Baseline configuration; values will be wired into the app in a later step.
+app:
+  name: "Plant Doctor AI"
+  confidence_threshold: 0.60
+
+image:
+  allowed_extensions:
+    - jpg
+    - jpeg
+    - png
+  image_size: 224
+
+model:
+  architecture: "efficientnet_b0"
+  weights_path: "artifacts/model_v1.pt"
+
+data:
+  root_dir: "data"

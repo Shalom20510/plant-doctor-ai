@@ -1,0 +1,13 @@
+# Core application
+streamlit>=1.38,<2.0
+Pillow>=10.0
+PyYAML>=6.0
+numpy>=1.26
+
+# Machine learning
+torch>=2.2
+torchvision>=0.17
+scikit-learn>=1.4
+
+# Testing
+pytest>=8.0
