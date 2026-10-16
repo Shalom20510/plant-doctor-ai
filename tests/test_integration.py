@@ -50,7 +50,7 @@ def test_predict_image_accepts_file_like_input(monkeypatch: pytest.MonkeyPatch) 
 
     monkeypatch.setattr(
         predict_module,
-        "load_model",
+        "load_checkpoint_model",
         lambda checkpoint_path, device: (
             FixedModel(),
             ["Apple___healthy", "Tomato___healthy"],
