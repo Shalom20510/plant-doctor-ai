@@ -142,6 +142,7 @@ def main() -> None:
     print(f"Validation images: {len(all_targets)}")
     print(f"Classes: {len(checkpoint_classes)}")
     print(f"Accuracy: {results['accuracy']:.4f}")
+    print(f"Balanced accuracy: {results['balanced_accuracy']:.4f}")
     print(f"Macro-F1: {results['macro_f1']:.4f}")
     print("\nPer-class metrics:")
     print(
