@@ -4,7 +4,7 @@ A computer-vision prototype that predicts possible plant-leaf health conditions 
 
 ## Current status
 
-The repository includes the Streamlit interface, EfficientNet-B0 model loader, image prediction pipeline, dataset splitting, training script, and evaluation script. **A trained plant-disease checkpoint and dataset are not included**, so predictions will not work until you prepare data and train a model (or provide a compatible checkpoint).
+The repository includes the Streamlit interface, EfficientNet-B0 model loader, image prediction pipeline, training/evaluation scripts, a trained checkpoint at `artifacts/models/model_v1.pt`, and its class mapping at `artifacts/reports/class_to_idx.json`. The training dataset is not included; provide a compatible labeled dataset to reproduce evaluation and robustness results.
 
 ## Supported baseline
 
@@ -49,7 +49,7 @@ Useful options include `--batch_size`, `--val_fraction`, `--seed`, `--learning_r
 ## Evaluate the checkpoint
 
 ```powershell
-python -m src.eval --data_dir data/plantvillage/color --checkpoint artifacts/model_v1.pt
+python -m src.eval --data_dir data/plantvillage/color --checkpoint artifacts/models/model_v1.pt
 ```
 
 Evaluation recreates the deterministic per-class validation split using the same seed and validation fraction as training by default. It prints accuracy, macro-F1, and per-class metrics, and saves a JSON report and confusion matrix data under `artifacts/evaluation/evaluation_report.json`. For a stronger final assessment, use an independent test dataset that was not used during model selection.
@@ -60,7 +60,21 @@ Evaluation recreates the deterministic per-class validation split using the same
 streamlit run app/streamlit_app.py
 ```
 
-Open the local URL printed by Streamlit, upload a JPG, JPEG, or PNG leaf image, and click **Analyze leaf**. The app expects a compatible trained checkpoint at `artifacts/model_v1.pt` by default; you can enter another checkpoint path in the interface.
+Open the local URL printed by Streamlit, upload a JPG, JPEG, or PNG leaf image, and click **Analyze leaf**. The app loads `artifacts/models/model_v1.pt` and `artifacts/reports/class_to_idx.json` from the repository.
+
+## Image robustness evaluation
+
+Place a labeled dataset in the folder-based structure shown above, with the exact class names/order used by the checkpoint, then run:
+
+```cmd
+py -m src.robustness --data_dir data/plantvillage/color --checkpoint artifacts/models/model_v1.pt
+```
+
+The script compares the original images with synthetic dim/bright, 15°/30° rotation, Gaussian blur, and synthetic edge-clutter variants. It reports accuracy, macro-F1, and accuracy change versus the original images in `artifacts/evaluation/robustness_report.json`.
+
+For a quick smoke test, use `--max_images 20`; remove that option for the full dataset. This report is only as representative as the dataset. The edge-clutter transformation is a simple synthetic stress test, not a realistic background replacement. For final results, use a separate held-out test set and include real field photos.
+
+The app also screens for low resolution, blur, extreme brightness, unusual framing, and potentially busy backgrounds. Severe quality warnings and ambiguous CLIP image validation ask the user to upload a clearer leaf photo. These checks are heuristic and may make mistakes; they are not a guarantee of disease-diagnosis accuracy.
 
 ## Important limitations
 
