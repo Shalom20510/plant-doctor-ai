@@ -134,15 +134,6 @@ These tests verify the decision logic for supported candidates, non-leaf inputs,
 
 Implementation is present, but measured robustness results are **pending** because the labeled PlantVillage dataset is not included in this repository and was not found in the local project folders during the latest test. Running the robustness command without that dataset correctly stops with a `FileNotFoundError`; no accuracy or macro-F1 values should be reported for transformed images until the test is actually run.
 
-### Quick verification checklist
-
-- [x] Synthetic transformations implemented: dim/bright, rotations, Gaussian blur, synthetic edge clutter.
-- [x] Streamlit image-quality heuristics and uncertainty/clearer-image handling implemented.
-- [x] Robustness evaluation script writes per-condition accuracy, macro-F1, and accuracy delta to JSON.
-- [ ] Place a compatible labeled dataset in `data/plantvillage/color/<class_name>/*`.
-- [ ] Confirm dataset class names match the checkpoint class mapping.
-- [ ] Run the robustness evaluation and retain `artifacts/evaluation/robustness_report.json`.
-- [ ] Review actual before/after metrics and document findings before making performance claims.
 
 ### Run a quick evaluation
 
