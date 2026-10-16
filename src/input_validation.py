@@ -79,6 +79,7 @@ def aggregate_scope_logits(
     crop_prompt_scores: dict[str, list[float]],
     unsupported_prompt_scores: list[float],
     non_leaf_prompt_scores: dict[str, float],
+    ambiguous_prompt_score: float | None = None,
 ) -> tuple[str, float, float]:
     """Aggregate raw CLIP logits across templates and return (label, best score, supported score).
 
@@ -96,6 +97,8 @@ def aggregate_scope_logits(
     all_scores = [
         score for values in crop_prompt_scores.values() for score in values
     ] + list(unsupported_prompt_scores) + list(non_leaf_prompt_scores.values())
+    if ambiguous_prompt_score is not None:
+        all_scores.append(ambiguous_prompt_score)
     if any(not math.isfinite(float(score)) for score in all_scores):
         raise ValueError("Prompt scores must all be finite numbers")
 
@@ -111,6 +114,8 @@ def aggregate_scope_logits(
     )
 
     group_logits = [best_supported_logit, unsupported_logit, best_non_leaf_logit]
+    if ambiguous_prompt_score is not None:
+        group_logits.append(float(ambiguous_prompt_score))
     max_logit = max(group_logits)
     exp_scores = [math.exp(value - max_logit) for value in group_logits]
     denominator = sum(exp_scores)
@@ -121,8 +126,10 @@ def aggregate_scope_logits(
         description = SUPPORTED_PROMPTS[SUPPORTED_CROP_NAMES.index(best_crop)]
     elif winner == 1:
         description = UNSUPPORTED_LEAF_PROMPT
-    else:
+    elif winner == 2:
         description = best_non_leaf_prompt
+    else:
+        description = AMBIGUOUS_PROMPT
 
     return description, group_scores[winner], group_scores[0]
 
