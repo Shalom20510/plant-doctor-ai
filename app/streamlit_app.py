@@ -53,7 +53,6 @@ def validate_plant_image(image):
     descriptions = list(SUPPORTED_PROMPTS) + [
         UNSUPPORTED_LEAF_PROMPT,
         *NON_LEAF_PROMPTS,
-        AMBIGUOUS_PROMPT,
     ]
     inputs = processor(text=descriptions, images=image, return_tensors="pt", padding=True)
     with torch.no_grad():
@@ -63,16 +62,17 @@ def validate_plant_image(image):
     supported_count = len(SUPPORTED_PROMPTS)
     unsupported_index = supported_count
     nonleaf_start = unsupported_index + 1
-    ambiguous_index = len(descriptions) - 1
 
-    # Compare four groups rather than summing 14 supported prompts against one
-    # unsupported prompt; the latter would unfairly favor the larger prompt group.
+    # Do not let a generic "ambiguous image" prompt compete with the actual
+    # subject categories: it can incorrectly win for clear non-leaf photos.
+    # Compare the best supported-crop prompt, unsupported-leaf prompt, and
+    # non-leaf prompt as three mutually competing groups.
     supported_local_index = int(logits[:supported_count].argmax().item())
+    nonleaf_logits = logits[nonleaf_start:]
     group_logits = torch.stack([
         logits[supported_local_index],
         logits[unsupported_index],
-        logits[nonleaf_start:ambiguous_index].max(),
-        logits[ambiguous_index],
+        nonleaf_logits.max(),
     ])
     group_scores = group_logits.softmax(dim=0)
     group_index = int(group_scores.argmax().item())
@@ -80,11 +80,9 @@ def validate_plant_image(image):
         best_description = SUPPORTED_PROMPTS[supported_local_index]
     elif group_index == 1:
         best_description = UNSUPPORTED_LEAF_PROMPT
-    elif group_index == 2:
-        nonleaf_local_index = int(logits[nonleaf_start:ambiguous_index].argmax().item())
-        best_description = NON_LEAF_PROMPTS[nonleaf_local_index]
     else:
-        best_description = AMBIGUOUS_PROMPT
+        nonleaf_local_index = int(nonleaf_logits.argmax().item())
+        best_description = NON_LEAF_PROMPTS[nonleaf_local_index]
 
     best_score = float(group_scores[group_index].item())
     supported_score = float(group_scores[0].item())
