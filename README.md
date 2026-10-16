@@ -70,7 +70,7 @@ Place a labeled dataset in the folder-based structure shown above, with the exac
 py -m src.robustness --data_dir data/plantvillage/color --checkpoint artifacts/models/model_v1.pt
 ```
 
-The script compares the original images with synthetic dim/bright, 15°/30° rotation, Gaussian blur, and synthetic edge-clutter variants. It reports accuracy, macro-F1, and accuracy change versus the original images in `artifacts/evaluation/robustness_report.json`.
+The script compares the original images with synthetic dim/bright, 15°/30° rotation, Gaussian blur, and synthetic edge-clutter variants. It reports accuracy, macro-F1, and accuracy change versus the original images in `artifacts/evaluation/robustness_report.json`. When `--max_images` is used, it selects a deterministic approximately class-balanced subset rather than simply taking the first files (which could overrepresent one class).
 
 For a quick smoke test, use `--max_images 20`; remove that option for the full dataset. This report is only as representative as the dataset. The edge-clutter transformation is a simple synthetic stress test, not a realistic background replacement. For final results, use a separate held-out test set and include real field photos.
 
@@ -107,3 +107,14 @@ py -m src.robustness --data_dir data/plantvillage/color --checkpoint artifacts/m
 ```
 
 This is a small smoke test, not a full benchmark. Use the same labeled images for each synthetic condition, and use an independent held-out test set for final claims. Do not fabricate missing metrics. The recorded checkpoint validation metrics are not robustness results.
+
+
+### Dataset-free smoke tests
+
+The transformation helpers have lightweight tests that do not require the PlantVillage dataset:
+
+```cmd
+py -m unittest discover -s tests -v
+```
+
+These tests check that expected transformations are produced, image dimensions/modes are preserved, synthetic clutter is repeatable for a fixed seed, and brightness variants differ. They do **not** measure classifier accuracy or establish real-world robustness.
