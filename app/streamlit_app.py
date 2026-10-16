@@ -361,29 +361,55 @@ def inject_human_ui():
             background: var(--surface);
             border: 1px solid var(--line);
             border-radius: 18px;
-            padding: 1.1rem;
+            padding: 1rem;
             overflow: hidden;
         }
-        .example-art {
+        .guide-visual {
             background: #e9efe2;
             border-radius: 13px;
-            padding: .5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 290px;
+            overflow: hidden;
+            padding: .4rem;
         }
-        .example-title {
+        .guide-heading {
             color: var(--leaf-dark);
             font-size: 1.12rem;
-            font-weight: 700;
-            margin: .9rem 0 .25rem;
+            font-weight: 750;
+            margin: .85rem 0 .2rem;
         }
-        .example-copy {
+        .guide-subtitle {
             color: var(--muted);
             font-size: .9rem;
-            line-height: 1.55;
-            margin: 0;
+            line-height: 1.5;
+            margin-bottom: .85rem;
+        }
+        .guide-examples {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: .55rem;
+        }
+        .guide-example {
+            min-width: 0;
+            border-radius: 10px;
+            padding: .6rem .65rem;
+            background: #f0f5eb;
+            border: 1px solid #e0e9d9;
+        }
+        .guide-example.bad {
+            background: #fff1ef;
+            border-color: #f4dfdc;
+        }
+        .guide-example strong {
+            display: block;
+            color: #315b3b;
+            font-size: .78rem;
+            margin-bottom: .18rem;
+        }
+        .guide-example.bad strong { color: #a33f3a; }
+        .guide-example span {
+            display: block;
+            color: #586458;
+            font-size: .73rem;
+            line-height: 1.4;
         }
         /* Streamlit uploader: force a light dropzone and readable dark text. */
         [data-testid="stFileUploader"] {
@@ -483,31 +509,68 @@ def main():
         st.markdown(
             """
             <div class="example-card">
-              <div class="example-art">
-                <svg viewBox="0 0 420 320" role="img" aria-label="Illustration of a healthy green plant" style="width:100%;max-width:390px;height:auto;">
-                  <ellipse cx="210" cy="282" rx="100" ry="12" fill="#d3dfc9"/>
-                  <path d="M210 253 C207 211 212 171 207 112" stroke="#426747" stroke-width="7" stroke-linecap="round" fill="none"/>
-                  <path d="M207 181 C168 171 147 144 145 111 C177 116 204 139 207 181Z" fill="#71956a"/>
-                  <path d="M208 149 C237 140 263 111 263 79 C231 88 211 111 208 149Z" fill="#426747"/>
-                  <path d="M209 218 C173 213 148 191 143 164 C176 166 202 187 209 218Z" fill="#9bb68b"/>
-                  <path d="M210 205 C246 197 271 173 277 145 C244 151 218 175 210 205Z" fill="#62875b"/>
-                  <path d="M208 124 C188 111 180 88 187 65 C208 79 218 101 208 124Z" fill="#b3c9a4"/>
-                  <path d="M210 253 C210 236 211 224 210 211" stroke="#426747" stroke-width="5" stroke-linecap="round" fill="none"/>
-                  <path d="M157 132 L202 171 M254 96 L213 139 M157 181 L202 210 M266 158 L216 197 M190 76 L207 117" stroke="#d9e6d0" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-                  <path d="M153 246 L267 246 L253 295 Q210 309 167 295 Z" fill="#c88461"/>
-                  <path d="M146 239 Q210 230 274 239 L270 254 Q210 264 150 254 Z" fill="#a96547"/>
-                  <path d="M177 269 Q210 277 243 269" stroke="#dba184" stroke-width="3" stroke-linecap="round" fill="none"/>
-                  <circle cx="307" cy="61" r="20" fill="#d3dfc9"/>
-                  <path d="M300 61 Q307 48 314 61 Q307 74 300 61Z" fill="#426747"/>
+              <div class="guide-visual">
+                <svg viewBox="0 0 520 300" role="img" aria-label="Leaf photo framing guide showing one leaf in focus, daylight and a clear close-up" style="display:block;width:100%;height:auto;">
+                  <defs>
+                    <linearGradient id="leafBg" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0" stop-color="#dfe9d5"/>
+                      <stop offset="1" stop-color="#cbdcbd"/>
+                    </linearGradient>
+                    <linearGradient id="leafFill" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0" stop-color="#9fbd79"/>
+                      <stop offset="1" stop-color="#3d7447"/>
+                    </linearGradient>
+                  </defs>
+                  <rect width="520" height="300" rx="12" fill="url(#leafBg)"/>
+                  <circle cx="444" cy="53" r="25" fill="#f8f7e9" opacity=".9"/>
+                  <circle cx="444" cy="53" r="11" fill="#e8bb56"/>
+                  <g stroke="#e8bb56" stroke-width="3" stroke-linecap="round">
+                    <path d="M444 17V10 M444 96V89 M408 53H401 M487 53H480 M419 28L414 23 M469 78L474 83 M469 28L474 23 M419 78L414 83"/>
+                  </g>
+                  <path d="M251 270 C249 218 254 172 276 117" stroke="#426747" stroke-width="8" stroke-linecap="round" fill="none"/>
+                  <path d="M267 190 C203 188 159 151 151 91 C210 93 259 130 267 190Z" fill="url(#leafFill)"/>
+                  <path d="M269 166 C315 148 350 105 349 56 C302 71 273 111 269 166Z" fill="#426747"/>
+                  <path d="M259 234 C208 231 173 205 161 164 C210 164 247 193 259 234Z" fill="#79a164"/>
+                  <path d="M269 220 C315 206 346 176 355 137 C310 143 280 179 269 220Z" fill="#5e8d50"/>
+                  <path d="M266 190 L169 104 M270 165 L337 68 M258 231 L176 177 M270 219 L343 147" stroke="#d8e9c9" stroke-width="3" stroke-linecap="round" fill="none"/>
+                  <rect x="118" y="32" width="284" height="232" rx="10" fill="none" stroke="#fffefa" stroke-width="3" stroke-dasharray="8 7" opacity=".95"/>
+                  <path d="M118 55V32H141 M379 32H402V55 M118 241V264H141 M379 264H402V241" fill="none" stroke="#315b3b" stroke-width="5" stroke-linecap="round"/>
+                  <rect x="18" y="18" width="116" height="38" rx="19" fill="#fffefa" opacity=".96"/>
+                  <circle cx="38" cy="37" r="8" fill="#426747"/>
+                  <path d="M34 37L37 40L43 33" fill="none" stroke="#fffefa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <text x="53" y="42" font-size="12" font-family="Arial, sans-serif" font-weight="700" fill="#315b3b">In focus</text>
+                  <rect x="18" y="246" width="146" height="36" rx="18" fill="#fffefa" opacity=".96"/>
+                  <circle cx="38" cy="264" r="8" fill="#e8bb56"/>
+                  <text x="53" y="269" font-size="12" font-family="Arial, sans-serif" font-weight="700" fill="#315b3b">Natural daylight</text>
+                  <rect x="344" y="235" width="158" height="42" rx="10" fill="#fffefa" opacity=".96"/>
+                  <text x="358" y="252" font-size="11" font-family="Arial, sans-serif" font-weight="700" fill="#315b3b">One leaf, close-up</text>
+                  <text x="358" y="266" font-size="10" font-family="Arial, sans-serif" fill="#586458">Show spots and edges</text>
                 </svg>
               </div>
-              <div class="example-title">What a good photo should show</div>
-              <p class="example-copy">One leaf in focus, clear details, and soft natural daylight. This illustration is a guide to framing, not a real plant photo.</p>
+              <div class="guide-heading">How to take a useful leaf photo</div>
+              <div class="guide-subtitle">Fill the frame with one leaf so the affected area is easy to see.</div>
+              <div class="guide-examples">
+                <div class="guide-example">
+                  <strong>✓ Good photo</strong>
+                  <span>One clear leaf, sharp details, natural light.</span>
+                </div>
+                <div class="guide-example bad">
+                  <strong>✕ Too blurry</strong>
+                  <span>Hold the camera steady and tap to focus.</span>
+                </div>
+                <div class="guide-example bad">
+                  <strong>✕ Too dark</strong>
+                  <span>Move to bright shade or soft daylight.</span>
+                </div>
+                <div class="guide-example bad">
+                  <strong>✕ Too many leaves</strong>
+                  <span>Frame just one leaf and its affected area.</span>
+                </div>
+              </div>
             </div>
             """,
             unsafe_allow_html=True,
         )
-
 
     st.divider()
     if uploaded_file is None:
