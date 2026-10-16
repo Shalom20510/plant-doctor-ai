@@ -45,3 +45,40 @@ def test_supported_prompt_with_low_scope_score_is_rejected():
 def test_invalid_scores_are_rejected(score):
     with pytest.raises(ValueError):
         decide_input_scope(SUPPORTED_PROMPTS[0], score, 0.2)
+
+from src.input_validation import (
+    CROP_PROMPT_VARIANTS,
+    SUPPORTED_CROP_NAMES,
+    crop_name_from_prompt,
+    normalize_crop_name,
+)
+
+
+def test_every_supported_crop_has_multiple_prompt_variants():
+    assert set(CROP_PROMPT_VARIANTS) == set(SUPPORTED_CROP_NAMES)
+    assert all(len(prompts) >= 5 for prompts in CROP_PROMPT_VARIANTS.values())
+
+
+def test_crop_specific_morphology_prompts_are_distinct():
+    assert "serrated leaflets" in CROP_PROMPT_VARIANTS["tomato"][-1]
+    assert "three broad oval leaflets" in CROP_PROMPT_VARIANTS["soybean"][-1]
+    assert CROP_PROMPT_VARIANTS["tomato"][-1] != CROP_PROMPT_VARIANTS["soybean"][-1]
+
+
+@pytest.mark.parametrize(
+    ("label", "expected"),
+    [
+        ("Bell Pepper", "bell pepper"),
+        ("Pepper bell", "bell pepper"),
+        ("Corn (maize)", "corn"),
+        ("Cherry (including sour)", "cherry"),
+        ("Tomato", "tomato"),
+    ],
+)
+def test_crop_name_aliases_normalize_consistently(label, expected):
+    assert normalize_crop_name(label) == expected
+
+
+def test_canonical_prompt_resolves_to_crop_name():
+    from src.input_validation import SUPPORTED_PROMPTS
+    assert crop_name_from_prompt(SUPPORTED_PROMPTS[-1]) == "tomato"
