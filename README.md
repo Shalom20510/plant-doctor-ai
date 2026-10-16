@@ -80,7 +80,7 @@ The app also screens for low resolution, blur, extreme brightness, unusual frami
 
 The Streamlit app runs two separate checks before showing a disease result:
 
-1. **Input-scope screening:** CLIP compares the uploaded image with text prompts for the 14 crop groups represented by the checkpoint (apple, blueberry, cherry, corn, grape, orange, peach, bell pepper, potato, raspberry, soybean, squash, strawberry, and tomato), an unsupported plant leaf, non-leaf subjects, and an ambiguous image. Inputs that do not match a supported crop prompt or fall below the scope-score threshold are rejected with an explanation.
+1. **Input-scope screening:** CLIP compares the uploaded image against five text descriptions per supported crop, including a morphology-focused description for each of the 14 crop groups (apple, blueberry, cherry, corn, grape, orange, peach, bell pepper, potato, raspberry, soybean, squash, strawberry, and tomato). The app averages the prompt logits within each crop before comparing the best crop against unsupported-leaf and non-leaf categories. Inputs outside the supported scope or below the scope-score threshold are rejected with an explanation.
 2. **Disease-model confidence rule:** if the top disease-class softmax score is below `LOW_CONFIDENCE_THRESHOLD = 0.60`, the app shows an **inconclusive** result, lists the closest model categories as alternatives rather than diagnoses, logs the rejection, and does not show disease-care guidance.
 
 For supported-candidate images that pass both checks, the app displays the predicted crop/disease category, model score, alternatives, and general care information. A score of 60% is a prototype decision threshold, not a verified probability that the prediction is correct.
@@ -110,8 +110,8 @@ These tests verify the decision logic for supported candidates, non-leaf inputs,
 
 ### Rejection-method limitations
 
-- CLIP scores are relative similarities/softmax scores across the prompt set, not calibrated probabilities of crop identity.
-- A visually similar unsupported leaf can match a supported crop prompt; a supported crop can also be rejected. The 0.28 scope-score threshold is heuristic and has not been calibrated against a labeled rejection dataset.
+- CLIP scores are relative similarities/softmax scores across prompt groups, not calibrated probabilities of crop identity. Averaging five descriptions may reduce prompt-wording sensitivity, but it has not yet been shown to improve crop accuracy on a labeled test set.
+- The morphology descriptions encode general visual cues rather than definitive botanical identification. A tomato-like image can still be mislabeled as soybean or bell pepper; crop-consistency rejection prevents a disease result when CLIP and the disease model disagree, but both can still agree on a wrong crop. The 0.28 scope-score threshold is heuristic and has not been calibrated against a labeled rejection dataset.
 - Softmax confidence can be high for a wrong disease class. The 0.60 threshold reduces some low-score predictions but does not guarantee correctness.
 - The 14 crop groups are the scope of the checkpoint's 38 disease/healthy classes; not every variety, disease, pest, nutrient problem, or environmental stress is represented.
 - Image-quality heuristics and CLIP screening are not a substitute for evaluation on held-out supported, unsupported, non-leaf, and ambiguous images. Report measured acceptance/rejection rates only after running such a labeled test set.
