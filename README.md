@@ -76,6 +76,46 @@ For a quick smoke test, use `--max_images 20`; remove that option for the full d
 
 The app also screens for low resolution, blur, extreme brightness, unusual framing, and potentially busy backgrounds. Severe quality warnings and ambiguous CLIP image validation ask the user to upload a clearer leaf photo. These checks are heuristic and may make mistakes; they are not a guarantee of disease-diagnosis accuracy.
 
+## Mission 03 — Unsupported input detection and reliable predictions
+
+The Streamlit app runs two separate checks before showing a disease result:
+
+1. **Input-scope screening:** CLIP compares the uploaded image with text prompts for the 14 crop groups represented by the checkpoint (apple, blueberry, cherry, corn, grape, orange, peach, bell pepper, potato, raspberry, soybean, squash, strawberry, and tomato), an unsupported plant leaf, non-leaf subjects, and an ambiguous image. Inputs that do not match a supported crop prompt or fall below the scope-score threshold are rejected with an explanation.
+2. **Disease-model confidence rule:** if the top disease-class softmax score is below `LOW_CONFIDENCE_THRESHOLD = 0.60`, the app shows an **inconclusive** result, lists the closest model categories as alternatives rather than diagnoses, logs the rejection, and does not show disease-care guidance.
+
+For supported-candidate images that pass both checks, the app displays the predicted crop/disease category, model score, alternatives, and general care information. A score of 60% is a prototype decision threshold, not a verified probability that the prediction is correct.
+
+### How to demonstrate the required cases
+
+Run the app and test these separate inputs:
+
+| Case | Suggested input | Expected behavior |
+|---|---|---|
+| Supported candidate | A sharp, well-lit image of one tomato or apple leaf | Passes the scope screen if CLIP matches a supported crop; disease result appears only if the disease score is at least 60% |
+| Non-leaf | A photo of a person, vehicle, food, or building | Rejected as non-leaf; disease classifier is not run |
+| Unsupported plant | A leaf from a crop not represented in the 14 supported crop groups | Rejected as unsupported when the unsupported-leaf prompt wins |
+| Ambiguous / poor quality | Blurry, dark, distant, or visually unclear leaf | Rejected by the scope or image-quality check, or marked inconclusive |
+
+Use actual photos and record the observed result for your demo. The expected outcomes above describe the intended rules; they are not a claim that every real image has already been tested.
+
+### Dataset-free rule tests
+
+Run:
+
+```cmd
+py -m pytest tests/test_input_validation.py -q
+```
+
+These tests verify the decision logic for supported candidates, non-leaf inputs, unsupported plant prompts, ambiguous inputs, low supported-crop scores, and invalid score values. They use deterministic score examples and **do not** run CLIP on actual photos or establish real-world rejection accuracy.
+
+### Rejection-method limitations
+
+- CLIP scores are relative similarities/softmax scores across the prompt set, not calibrated probabilities of crop identity.
+- A visually similar unsupported leaf can match a supported crop prompt; a supported crop can also be rejected. The 0.28 scope-score threshold is heuristic and has not been calibrated against a labeled rejection dataset.
+- Softmax confidence can be high for a wrong disease class. The 0.60 threshold reduces some low-score predictions but does not guarantee correctness.
+- The 14 crop groups are the scope of the checkpoint's 38 disease/healthy classes; not every variety, disease, pest, nutrient problem, or environmental stress is represented.
+- Image-quality heuristics and CLIP screening are not a substitute for evaluation on held-out supported, unsupported, non-leaf, and ambiguous images. Report measured acceptance/rejection rates only after running such a labeled test set.
+
 ## Important limitations
 
 - This is a prototype, not a definitive plant-health diagnosis.
