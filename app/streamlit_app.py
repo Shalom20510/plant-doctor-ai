@@ -285,7 +285,7 @@ def inject_human_ui():
         <style>
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap');
         :root { --leaf: #426747; --leaf-dark: #203d2b; --ink: #26332a; --muted: #687267; --paper: #f0f4e9; --line: #dce5d5; }
-        .stApp { background: var(--paper); color: var(--ink); background-image: radial-gradient(ellipse at 8% 12%, rgba(205,222,190,.35), transparent 30%), radial-gradient(ellipse at 94% 24%, rgba(216,230,204,.42), transparent 28%); }
+        .stApp { background: var(--paper); color: var(--ink); }
         [data-testid="stHeader"] { background: rgba(250,249,244,.92); }
         .block-container { max-width: 1180px; padding-top: 1.4rem; padding-bottom: 3rem; }
         html, body, [class*="css"] { font-family: 'DM Sans', sans-serif; }
@@ -294,7 +294,7 @@ def inject_human_ui():
         h1 { font-size: clamp(2.5rem, 5vw, 4.3rem) !important; line-height: 1.02 !important; }
         h2 { font-size: 2rem !important; }
         p, li, label { color: var(--ink); }
-        .plant-brand { font-size: 1.05rem; font-weight: 700; letter-spacing: .02em; color: var(--leaf-dark); }
+        .plant-brand { font-size: 1.25rem; font-weight: 700; letter-spacing: .01em; color: var(--leaf-dark); padding: .35rem 0 .65rem; }
         .plant-eyebrow { text-transform: uppercase; letter-spacing: .16em; font-size: .72rem; font-weight: 700; color: var(--leaf); margin-bottom: .8rem; }
         .plant-intro { max-width: 600px; color: var(--muted); font-size: 1.12rem; line-height: 1.7; }
         .plant-note { background: #e6eddd; border-left: 3px solid #78916d; padding: 1rem 1.1rem; color: #465344; border-radius: 0 8px 8px 0; font-size: .94rem; }
@@ -309,6 +309,10 @@ def inject_human_ui():
         .block-container { max-width: 1260px; padding-top: 2rem; }
         [data-testid="stFileUploader"] { background: #fffefa; border: 1px dashed #a8b5a0; border-radius: 12px; padding: 1rem; }
         [data-testid="stFileUploader"] section { border: 0; }
+        [data-testid="stFileUploader"] { color: #26332a; }
+        [data-testid="stFileUploader"] button { background: #426747 !important; border: 1px solid #426747 !important; }
+        [data-testid="stFileUploader"] button p { color: #ffffff !important; }
+        [data-testid="stFileUploaderDropzone"] { background: #fffefa !important; }
         .stButton > button[kind="primary"] { background: var(--leaf); border: 1px solid var(--leaf); border-radius: 7px; min-height: 2.8rem; font-weight: 600; }
         .stButton > button[kind="primary"]:hover { background: var(--leaf-dark); border-color: var(--leaf-dark); }
         .stButton > button { border-radius: 7px; }
@@ -351,17 +355,13 @@ def main():
         )
         st.caption("JPG or PNG · Clear, well-lit leaf photos work best")
     with right:
-        st.markdown('<div class="example-panel">', unsafe_allow_html=True)
         st.markdown("#### Example of a good photo")
         st.image(
-            "https://images.unsplash.com/photo-1593691509543-c55fb32e5cee?auto=format&fit=crop&w=800&q=85",
+            "https://commons.wikimedia.org/wiki/Special:Redirect/file/Green_leaf_close_up.jpg",
             width=460,
         )
-        st.markdown(
-            '<p style="color:#426747;line-height:1.65;margin:.7rem 0 0">One leaf, in focus, with visible details. Natural daylight helps.</p>',
-            unsafe_allow_html=True,
-        )
-        st.markdown('</div>', unsafe_allow_html=True)
+        st.caption("One leaf, in focus, with visible details. Natural daylight helps.")
+        st.caption("Photo: Kirubanithi Suba, CC BY-SA 4.0 (Wikimedia Commons).")
 
     st.divider()
     if uploaded_file is None:
