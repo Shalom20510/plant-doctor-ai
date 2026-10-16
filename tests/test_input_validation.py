@@ -139,3 +139,15 @@ def test_prompt_ensemble_rejects_missing_crop_prompt_group():
             unsupported_prompt_scores=[0.0],
             non_leaf_prompt_scores={NON_LEAF_PROMPTS[0]: 0.0},
         )
+
+
+
+def test_prompt_ensemble_rejects_a_strong_ambiguous_match():
+    description, _, supported_score = aggregate_scope_logits(
+        _crop_scores(),
+        unsupported_prompt_scores=[0.0, 0.0, 0.0],
+        non_leaf_prompt_scores={prompt: 0.0 for prompt in NON_LEAF_PROMPTS},
+        ambiguous_prompt_score=7.0,
+    )
+    assert description == AMBIGUOUS_PROMPT
+    assert supported_score < 0.01
