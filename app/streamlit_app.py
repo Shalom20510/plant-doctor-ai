@@ -48,7 +48,7 @@ def load_clip_validator():
 
 
 def validate_plant_image(image):
-    """Use CLIP as a heuristic screen for the model's supported crop categories."""
+    """Use grouped CLIP logits to screen supported crops, unsupported leaves and non-leaf inputs."""
     processor, model = load_clip_validator()
     descriptions = list(SUPPORTED_PROMPTS) + [
         UNSUPPORTED_LEAF_PROMPT,
@@ -58,12 +58,36 @@ def validate_plant_image(image):
     inputs = processor(text=descriptions, images=image, return_tensors="pt", padding=True)
     with torch.no_grad():
         outputs = model(**inputs)
-        scores = outputs.logits_per_image.softmax(dim=1)[0]
+        logits = outputs.logits_per_image[0]
 
-    best_index = int(scores.argmax().item())
-    best_description = descriptions[best_index]
-    best_score = float(scores[best_index].item())
-    supported_score = sum(float(scores[i].item()) for i in range(len(SUPPORTED_PROMPTS)))
+    supported_count = len(SUPPORTED_PROMPTS)
+    unsupported_index = supported_count
+    nonleaf_start = unsupported_index + 1
+    ambiguous_index = len(descriptions) - 1
+
+    # Compare four groups rather than summing 14 supported prompts against one
+    # unsupported prompt; the latter would unfairly favor the larger prompt group.
+    supported_local_index = int(logits[:supported_count].argmax().item())
+    group_logits = torch.stack([
+        logits[supported_local_index],
+        logits[unsupported_index],
+        logits[nonleaf_start:ambiguous_index].max(),
+        logits[ambiguous_index],
+    ])
+    group_scores = group_logits.softmax(dim=0)
+    group_index = int(group_scores.argmax().item())
+    if group_index == 0:
+        best_description = SUPPORTED_PROMPTS[supported_local_index]
+    elif group_index == 1:
+        best_description = UNSUPPORTED_LEAF_PROMPT
+    elif group_index == 2:
+        nonleaf_local_index = int(logits[nonleaf_start:ambiguous_index].argmax().item())
+        best_description = NON_LEAF_PROMPTS[nonleaf_local_index]
+    else:
+        best_description = AMBIGUOUS_PROMPT
+
+    best_score = float(group_scores[group_index].item())
+    supported_score = float(group_scores[0].item())
     return best_description, best_score, supported_score
 
 
@@ -616,7 +640,7 @@ def main():
             scope = decide_input_scope(best_description, supported_score, best_score)
             st.caption(
                 f"Input scope check: {scope['status'].replace('_', ' ').title()} "
-                f"(best prompt score: {best_score:.1%}; supported-crop score sum: {supported_score:.1%})."
+                f"(best prompt score: {best_score:.1%}; supported-crop scope score: {supported_score:.1%})."
             )
             st.caption(
                 "These are relative CLIP scores, not calibrated probabilities. "
