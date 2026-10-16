@@ -284,8 +284,8 @@ def inject_human_ui():
         """
         <style>
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap');
-        :root { --leaf: #426747; --leaf-dark: #203d2b; --ink: #26332a; --muted: #687267; --paper: #faf9f4; --line: #e3e3d8; }
-        .stApp { background: var(--paper); color: var(--ink); }
+        :root { --leaf: #426747; --leaf-dark: #203d2b; --ink: #26332a; --muted: #687267; --paper: #f0f4e9; --line: #dce5d5; }
+        .stApp { background: var(--paper); color: var(--ink); background-image: radial-gradient(ellipse at 8% 12%, rgba(205,222,190,.35), transparent 30%), radial-gradient(ellipse at 94% 24%, rgba(216,230,204,.42), transparent 28%); }
         [data-testid="stHeader"] { background: rgba(250,249,244,.92); }
         .block-container { max-width: 1180px; padding-top: 1.4rem; padding-bottom: 3rem; }
         html, body, [class*="css"] { font-family: 'DM Sans', sans-serif; }
@@ -297,7 +297,7 @@ def inject_human_ui():
         .plant-brand { font-size: 1.05rem; font-weight: 700; letter-spacing: .02em; color: var(--leaf-dark); }
         .plant-eyebrow { text-transform: uppercase; letter-spacing: .16em; font-size: .72rem; font-weight: 700; color: var(--leaf); margin-bottom: .8rem; }
         .plant-intro { max-width: 600px; color: var(--muted); font-size: 1.12rem; line-height: 1.7; }
-        .plant-note { background: #f0f1e8; border-left: 3px solid #78916d; padding: 1rem 1.1rem; color: #465344; border-radius: 0 8px 8px 0; font-size: .94rem; }
+        .plant-note { background: #e6eddd; border-left: 3px solid #78916d; padding: 1rem 1.1rem; color: #465344; border-radius: 0 8px 8px 0; font-size: .94rem; }
         .sample-caption { font-size: .88rem; font-weight: 600; margin-top: .35rem; color: var(--leaf-dark); }
         [data-testid="stFileUploader"] { background: #fffefa; border: 1px dashed #a8b5a0; border-radius: 12px; padding: 1rem; }
         [data-testid="stFileUploader"] section { border: 0; }
