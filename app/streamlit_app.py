@@ -67,6 +67,9 @@ TRANSLATIONS = {
         "Symptoms to check": "పరిశీలించాల్సిన లక్షణాలు",
         "Suggested next step": "తదుపరి సూచన",
         "Prevention": "నివారణ",
+        "This image could not be opened. Please upload a valid JPG or PNG.": "ఈ చిత్రాన్ని తెరవలేకపోయాము. సరైన JPG లేదా PNG ఫోటోను అప్‌లోడ్ చేయండి.",
+        "The model did not return a prediction.": "మోడల్ ఎలాంటి అంచనాను ఇవ్వలేదు.",
+        "Checking image and analyzing the leaf...": "చిత్రాన్ని తనిఖీ చేసి ఆకును విశ్లేషిస్తున్నాము...",
         "In focus": "ఫోకస్‌లో ఉంది",
         "Natural daylight": "సహజ పగటి వెలుతురు",
         "One leaf, close-up": "ఒక ఆకు, దగ్గరి దృశ్యం",
@@ -581,7 +584,7 @@ def main():
     language_label = st.selectbox("Language / భాష", options=list(LANGUAGES), key="plant_doctor_language_label")
     st.session_state["plant_doctor_language"] = LANGUAGES[language_label]
     inject_human_ui()
-    st.markdown('<div class="plant-brand">🌿 Plant Doctor <span style="font-weight:400;color:#687267">/ a little help for healthier plants</span></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="plant-brand">{tr("🌿 Plant Doctor")} <span style="font-weight:400;color:#687267">{tr("/ a little help for healthier plants")}</span></div>', unsafe_allow_html=True)
     st.divider()
 
     try:
@@ -688,7 +691,7 @@ def main():
         exif_orientation = source_image.getexif().get(274, 1)
         image = ImageOps.exif_transpose(source_image).convert("RGB")
     except Exception:
-        st.error("This image could not be opened. Please upload a valid JPG or PNG.")
+        st.error(tr("This image could not be opened. Please upload a valid JPG or PNG."))
         return
 
     st.subheader(tr("Your photo"))
@@ -697,8 +700,8 @@ def main():
         st.image(image, width="stretch")
     with space_col:
         st.markdown("**" + tr("Before analysis") + "**")
-        st.caption("Check that the leaf is visible and the affected area is in focus.")
-        st.caption("The image-quality checks below may recommend a clearer photo.")
+        st.caption(tr("Check that the leaf is visible and the affected area is in focus."))
+        st.caption(tr("The image-quality checks below may recommend a clearer photo."))
 
     quality_warnings = image_quality_checks(image)
     if exif_orientation in (3, 6, 8):
@@ -712,7 +715,7 @@ def main():
         for warning in quality_warnings:
             st.write(f"• {warning}")
     else:
-        st.caption("No obvious image-quality issue detected by the basic checks.")
+        st.caption(tr("No obvious image-quality issue detected by the basic checks."))
 
     st.caption(
         "Plant identification is automatic. If the crop screen and disease model disagree, "
@@ -721,7 +724,7 @@ def main():
 
     if st.button(tr("Analyze Leaf"), type="primary", width="stretch"):
         
-        with st.spinner("Checking image and analyzing the leaf..."):
+        with st.spinner(tr("Checking image and analyzing the leaf...")):
             try:
                 best_description, best_score, supported_score = validate_plant_image(image)
             except Exception as error:
@@ -780,7 +783,7 @@ def main():
 
 
         if not predictions:
-            st.error("The model did not return a prediction.")
+            st.error(tr("The model did not return a prediction."))
             return
 
         top_label, top_prob = predictions[0]
