@@ -17,6 +17,7 @@ from pathlib import Path
 import torch
 from sklearn.metrics import (
     accuracy_score,
+    balanced_accuracy_score,
     classification_report,
     confusion_matrix,
     f1_score,
@@ -118,6 +119,7 @@ def main() -> None:
         "validation_images": len(all_targets),
         "num_classes": len(checkpoint_classes),
         "accuracy": float(accuracy_score(all_targets, all_predictions)),
+        "balanced_accuracy": float(balanced_accuracy_score(all_targets, all_predictions)),
         "macro_f1": float(
             f1_score(all_targets, all_predictions, average="macro", zero_division=0)
         ),
