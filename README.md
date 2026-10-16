@@ -74,7 +74,7 @@ The script compares the original images with synthetic dim/bright, 15°/30° rot
 
 For a quick smoke test, use `--max_images 20`; remove that option for the full dataset. This report is only as representative as the dataset. The edge-clutter transformation is a simple synthetic stress test, not a realistic background replacement. For final results, use a separate held-out test set and include real field photos.
 
-The app also screens for low resolution, blur, extreme brightness, unusual framing, potentially busy backgrounds, and an explicit ambiguous-image CLIP prompt. Severe quality warnings and ambiguous/unsupported scope results ask the user to upload a clearer leaf photo. These checks are heuristic and may make mistakes; they are not a guarantee of disease-diagnosis accuracy.
+The app also screens for low resolution, blur, extreme brightness, unusual framing, and potentially busy backgrounds. Low supported-crop scope scores and severe image-quality warnings can trigger an inconclusive result and ask the user to upload a clearer leaf photo. These checks are heuristic and may make mistakes; they are not a guarantee of disease-diagnosis accuracy.
 
 ## Mission 03 — Unsupported input detection and reliable predictions
 
@@ -112,7 +112,7 @@ Run:
 py -m pytest tests/test_input_validation.py -q
 ```
 
-These tests verify the decision logic for supported candidates, non-leaf inputs, unsupported plant prompts, ambiguous inputs, low supported-crop scores, and invalid score values. They use deterministic score examples and **do not** run CLIP on actual photos or establish real-world rejection accuracy.
+These tests verify the decision logic for supported candidates, non-leaf inputs, unsupported plant prompts, ambiguous/low-scope inputs, low supported-crop scores, and invalid score values. The live image-screening path compares supported crops, unsupported-leaf prompts, and non-leaf prompts; it relies on low scope scores and image-quality heuristics for ambiguity rather than a separate ambiguity prompt. They use deterministic score examples and **do not** run CLIP on actual photos or establish real-world rejection accuracy.
 
 ### Rejection-method limitations
 
