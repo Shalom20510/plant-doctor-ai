@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import Any, BinaryIO
 
 import torch
 from PIL import Image, UnidentifiedImageError
@@ -34,10 +34,21 @@ def preprocess_image(image: Image.Image) -> torch.Tensor:
     return transform(rgb_image).unsqueeze(0)
 
 
-def load_image(image_source: str | Path | Image.Image) -> Image.Image:
-    """Open an image path or copy a supplied PIL image into RGB mode."""
+def load_image(image_source: str | Path | Image.Image | BinaryIO) -> Image.Image:
+    """Load a path, PIL image, or seekable uploaded file and return RGB pixels."""
     if isinstance(image_source, Image.Image):
         return image_source.convert("RGB")
+
+    # Streamlit UploadedFile and ordinary file objects are file-like, not paths.
+    if hasattr(image_source, "read"):
+        try:
+            if hasattr(image_source, "seek"):
+                image_source.seek(0)
+            with Image.open(image_source) as image:
+                image.load()
+                return image.convert("RGB")
+        except (UnidentifiedImageError, OSError) as exc:
+            raise ValueError("Could not read a valid uploaded image.") from exc
 
     path = Path(image_source)
     if path.suffix.lower() not in SUPPORTED_EXTENSIONS:
@@ -64,7 +75,7 @@ def _format_label(label: str) -> tuple[str, str]:
 
 
 def predict_image(
-    image_source: str | Path | Image.Image,
+    image_source: str | Path | Image.Image | BinaryIO,
     checkpoint_path: str | Path = "artifacts/model_v1.pt",
     top_k: int = 3,
     device: str | torch.device | None = None,
