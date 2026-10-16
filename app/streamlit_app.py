@@ -343,22 +343,17 @@ def main():
         )
         st.caption("JPG or PNG · Clear, well-lit leaf photos work best")
     with right:
-        st.markdown("#### What kind of photo should I use?")
+        st.markdown('<div class="example-panel">', unsafe_allow_html=True)
+        st.markdown("#### Example of a good photo")
+        st.image(
+            "https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&w=900&q=85",
+            width="stretch",
+        )
         st.markdown(
-            '<p style="color:#687267;margin-top:-.4rem">These examples are visual guides. Upload your own photo using the button on the left.</p>',
+            '<p style="color:#426747;line-height:1.65;margin:.7rem 0 0">A clear, well-lit photo of one leaf works best. Keep the affected area in focus.</p>',
             unsafe_allow_html=True,
         )
-        sample_cols = st.columns(2, gap="medium")
-        samples = [
-            ("https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=500&q=80", "Healthy leaf", "Clear and in focus"),
-            ("https://images.unsplash.com/photo-1599685315640-7ec7f7b5e2b4?auto=format&fit=crop&w=500&q=80", "Visible spots", "Show the affected area"),
-            ("https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=500&q=80", "Leaf discoloration", "Keep the leaf close"),
-            ("https://images.unsplash.com/photo-1497250681960-ef046c08a56e?auto=format&fit=crop&w=500&q=80", "One leaf at a time", "Avoid distant whole-plant shots"),
-        ]
-        for i, (url, title, caption) in enumerate(samples):
-            with sample_cols[i % 2]:
-                st.image(url, use_container_width=True)
-                st.markdown(f'<div class="sample-caption">{title}</div><div style="font-size:.8rem;color:#687267;margin-bottom:.7rem">{caption}</div>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
     st.divider()
     if uploaded_file is None:
