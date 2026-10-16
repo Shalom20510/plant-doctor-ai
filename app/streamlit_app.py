@@ -299,6 +299,14 @@ def inject_human_ui():
         .plant-intro { max-width: 600px; color: var(--muted); font-size: 1.12rem; line-height: 1.7; }
         .plant-note { background: #e6eddd; border-left: 3px solid #78916d; padding: 1rem 1.1rem; color: #465344; border-radius: 0 8px 8px 0; font-size: .94rem; }
         .sample-caption { font-size: .88rem; font-weight: 600; margin-top: .35rem; color: var(--leaf-dark); }
+        .example-panel { background: rgba(255,255,250,.82); border: 1px solid var(--line); padding: 1rem; border-radius: 14px; }
+        [data-testid="stFileUploader"] button { background: var(--leaf) !important; color: white !important; border: 0 !important; }
+        [data-testid="stFileUploader"] button p { color: white !important; }
+        [data-testid="stFileUploader"] small, [data-testid="stFileUploader"] span { color: var(--ink); }
+        .stApp [data-testid="stHeader"] { background: rgba(240,244,233,.98); }
+        .plant-brand { font-size: 1.4rem; padding: .35rem 0 .8rem; }
+        .plant-intro { font-size: 1.15rem; }
+        .block-container { max-width: 1260px; padding-top: 2rem; }
         [data-testid="stFileUploader"] { background: #fffefa; border: 1px dashed #a8b5a0; border-radius: 12px; padding: 1rem; }
         [data-testid="stFileUploader"] section { border: 0; }
         .stButton > button[kind="primary"] { background: var(--leaf); border: 1px solid var(--leaf); border-radius: 7px; min-height: 2.8rem; font-weight: 600; }
@@ -346,11 +354,11 @@ def main():
         st.markdown('<div class="example-panel">', unsafe_allow_html=True)
         st.markdown("#### Example of a good photo")
         st.image(
-            "https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&w=900&q=85",
-            width="stretch",
+            "https://images.unsplash.com/photo-1593691509543-c55fb32e5cee?auto=format&fit=crop&w=800&q=85",
+            width=460,
         )
         st.markdown(
-            '<p style="color:#426747;line-height:1.65;margin:.7rem 0 0">A clear, well-lit photo of one leaf works best. Keep the affected area in focus.</p>',
+            '<p style="color:#426747;line-height:1.65;margin:.7rem 0 0">One leaf, in focus, with visible details. Natural daylight helps.</p>',
             unsafe_allow_html=True,
         )
         st.markdown('</div>', unsafe_allow_html=True)
@@ -359,9 +367,9 @@ def main():
     if uploaded_file is None:
         st.markdown("#### A few tips before you take the photo")
         tip1, tip2, tip3 = st.columns(3)
-        tip1.markdown("**Get close**  \nKeep the leaf large in the frame.")
-        tip2.markdown("**Find natural light**  \nAvoid strong shadows and glare.")
-        tip3.markdown("**Keep it steady**  \nMake sure the spots and edges look sharp.")
+        tip1.markdown("**Get close**  \nKeep one leaf large in the frame.")
+        tip2.markdown("**Use daylight**  \nAvoid strong shadows and glare.")
+        tip3.markdown("**Keep it steady**  \nKeep the leaf details sharp.")
         st.caption("Your photo is checked for basic quality before the disease classifier runs.")
         return
 
