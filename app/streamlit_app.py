@@ -642,7 +642,7 @@ def main():
             scope = decide_input_scope(best_description, supported_score, best_score)
             st.caption(
                 f"Input scope check: {scope['status'].replace('_', ' ').title()} "
-                f"(best prompt score: {best_score:.1%}; supported-crop scope score: {supported_score:.1%})."
+                f"(winning scope-category score: {best_score:.1%}; supported-crop scope score: {supported_score:.1%})."
             )
             st.caption(
                 "These are relative CLIP scores, not calibrated probabilities. "
