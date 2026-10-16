@@ -574,7 +574,7 @@ def main():
     try:
         model, idx_to_class, transform, device, model_version = load_artifacts()
     except (FileNotFoundError, RuntimeError, KeyError) as error:
-        st.error(f"Could not load the model: {error}")
+        st.error(f"మోడల్‌ను లోడ్ చేయలేకపోయాము: {error}")
         st.stop()
 
     st.markdown(f'<div class="plant-eyebrow">{tr("A simple plant health check")}</div>', unsafe_allow_html=True)
@@ -635,8 +635,8 @@ def main():
                   <text x="358" y="266" font-size="10" font-family="Arial, sans-serif" fill="#586458">మచ్చలు, అంచులు కనిపించాలి</text>
                 </svg>
               </div>
-              <div class="guide-heading">{tr("How to take a useful leaf photo")}</div>
-              <div class="guide-subtitle">{tr("Fill the frame with one leaf so the affected area is easy to see.")}</div>
+              <div class="guide-heading">ఆకు ఫోటోను సరిగ్గా ఎలా తీయాలి</div>
+              <div class="guide-subtitle">ప్రభావిత భాగం స్పష్టంగా కనిపించేలా ఒక ఆకును ఫ్రేమ్‌లో నింపండి.</div>
               <div class="guide-examples">
                 <div class="guide-example">
                   <strong>{tr("✓ Good photo")}</strong>
@@ -667,7 +667,7 @@ def main():
         tip1.markdown("**Get close**  \nKeep one leaf large in the frame.")
         tip2.markdown("**Use daylight**  \nAvoid strong shadows and glare.")
         tip3.markdown("**Keep it steady**  \nKeep the leaf details sharp.")
-        st.caption("Your photo is checked for basic quality before the disease classifier runs.")
+        st.caption(tr("Your photo is checked for basic quality before the disease classifier runs."))
         return
 
     try:
@@ -712,7 +712,7 @@ def main():
             try:
                 best_description, best_score, supported_score = validate_plant_image(image)
             except Exception as error:
-                st.error(f"Image validation failed: {error}")
+                st.error(f"చిత్రాన్ని తనిఖీ చేయడంలో లోపం: {error}")
                 st.info(tr("Please try again. Disease prediction was not run."))
                 return
 
@@ -843,7 +843,7 @@ def main():
         result_image, result_text = st.columns([0.9, 1.1], gap="large")
         with result_image:
             st.image(image, width="stretch")
-            st.caption("Your uploaded leaf")
+            st.caption(tr("Your uploaded leaf"))
         with result_text:
             st.info(
                 "Here’s the model’s closest match after the input checks. It may still be wrong, "
