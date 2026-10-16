@@ -85,11 +85,11 @@ The Streamlit app runs two separate checks before showing a disease result:
 
 For supported-candidate images that pass both checks, the app displays the predicted crop/disease category, model score, alternatives, and general care information. A score of 60% is a prototype decision threshold, not a verified probability that the prediction is correct.
 
-### Optional user-confirmed crop mode
+### User-confirmed crop mode
 
-The UI offers **Automatic (recommended)** and an optional crop selector. Automatic mode requires the CLIP screen and disease classifier to agree on the crop; otherwise, it returns an inconclusive mismatch result. When a user explicitly confirms a crop (for example, Tomato), the disease classifier is restricted to that crop's available classes and reports its condition score among those classes.
+Because the disease classifier can confuse visually similar crop species, the UI now requires the user to select the crop before analysis. The input-scope screen still rejects non-leaf and unsupported inputs. The disease classifier is then restricted to the selected crop's available classes, and the result explicitly says that the crop was selected by the user rather than automatically identified.
 
-This mode is useful when the user knows the crop but the automatic crop screen confuses visually similar leaves. It does **not** independently verify the selected species and can still return the wrong condition. Scores in user-confirmed crop mode are conditional on that crop's class subset, so they should not be compared directly with scores from automatic all-class mode. Never describe this as a model accuracy improvement without a labeled evaluation.
+This change prevents the application from showing another crop's class label when the user has selected the correct crop, but **it does not make the underlying disease model more accurate**. It may still select the wrong condition within the chosen crop, such as "healthy" for a leaf that is diseased. Scores are softmax values conditional on that crop's class subset and must not be compared directly with the old global all-class scores. A wrong crop selection can also produce a misleading result. The prototype needs labeled, real-photo evaluation and likely model retraining/fine-tuning before claiming reliable disease identification.
 
 ### How to demonstrate the required cases
 
