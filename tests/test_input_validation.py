@@ -49,6 +49,7 @@ def test_invalid_scores_are_rejected(score):
 from src.input_validation import (
     CROP_PROMPT_VARIANTS,
     SUPPORTED_CROP_NAMES,
+    aggregate_scope_logits,
     crop_name_from_prompt,
     normalize_crop_name,
 )
@@ -82,3 +83,59 @@ def test_crop_name_aliases_normalize_consistently(label, expected):
 def test_canonical_prompt_resolves_to_crop_name():
     from src.input_validation import SUPPORTED_PROMPTS
     assert crop_name_from_prompt(SUPPORTED_PROMPTS[-1]) == "tomato"
+
+def _crop_scores(default=0.0):
+    return {
+        crop: [default] * len(CROP_PROMPT_VARIANTS[crop])
+        for crop in SUPPORTED_CROP_NAMES
+    }
+
+
+def test_prompt_ensemble_averages_scores_within_each_crop():
+    scores = _crop_scores()
+    scores["tomato"] = [8.0, 8.0, 8.0, 8.0, 8.0]
+    # One misleading large soybean prompt score should not outweigh its lower
+    # average across the full template ensemble.
+    scores["soybean"] = [20.0, 2.0, 2.0, 2.0, 2.0]
+    description, best_score, supported_score = aggregate_scope_logits(
+        scores,
+        unsupported_prompt_scores=[4.0, 4.0, 4.0],
+        non_leaf_prompt_scores={prompt: 0.0 for prompt in NON_LEAF_PROMPTS},
+    )
+    assert description == SUPPORTED_PROMPTS[-1]
+    assert best_score == pytest.approx(supported_score)
+    assert supported_score > 0.90
+
+
+def test_prompt_ensemble_rejects_a_strong_non_leaf_match():
+    description, _, supported_score = aggregate_scope_logits(
+        _crop_scores(),
+        unsupported_prompt_scores=[0.0, 0.0, 0.0],
+        non_leaf_prompt_scores={
+            prompt: (7.0 if prompt == NON_LEAF_PROMPTS[0] else 0.0)
+            for prompt in NON_LEAF_PROMPTS
+        },
+    )
+    assert description == NON_LEAF_PROMPTS[0]
+    assert supported_score < 0.01
+
+
+def test_prompt_ensemble_rejects_a_strong_unsupported_leaf_match():
+    description, _, supported_score = aggregate_scope_logits(
+        _crop_scores(),
+        unsupported_prompt_scores=[7.0, 7.0, 7.0],
+        non_leaf_prompt_scores={prompt: 0.0 for prompt in NON_LEAF_PROMPTS},
+    )
+    assert description == UNSUPPORTED_LEAF_PROMPT
+    assert supported_score < 0.01
+
+
+def test_prompt_ensemble_rejects_missing_crop_prompt_group():
+    scores = _crop_scores()
+    scores.pop("tomato")
+    with pytest.raises(ValueError, match="exactly the supported crop names"):
+        aggregate_scope_logits(
+            scores,
+            unsupported_prompt_scores=[0.0],
+            non_leaf_prompt_scores={NON_LEAF_PROMPTS[0]: 0.0},
+        )
