@@ -87,11 +87,9 @@ The Streamlit app runs two separate checks before showing a disease result:
 
 For supported-candidate images that pass both checks, the app displays the predicted crop/disease category, model score, alternatives, and general care information. A score of 60% is a prototype decision threshold, not a verified probability that the prediction is correct.
 
-### User-confirmed crop mode
+### Automatic crop-consistency rejection
 
-Because the disease classifier can confuse visually similar crop species, the UI now requires the user to select the crop before analysis. The input-scope screen still rejects non-leaf and unsupported inputs. The disease classifier is then restricted to the selected crop's available classes, and the result explicitly says that the crop was selected by the user rather than automatically identified.
-
-This change prevents the application from showing another crop's class label when the user has selected the correct crop, but **it does not make the underlying disease model more accurate**. It may still select the wrong condition within the chosen crop, such as "healthy" for a leaf that is diseased. Scores are softmax values conditional on that crop's class subset and must not be compared directly with the old global all-class scores. A wrong crop selection can also produce a misleading result. The prototype needs labeled, real-photo evaluation and likely model retraining/fine-tuning before claiming reliable disease identification.
+The UI does not ask the user to choose a crop. CLIP screens the image automatically, and the disease classifier predicts across its trained classes. If the crop candidate from CLIP and the crop label from the disease classifier disagree, the app returns an inconclusive mismatch result instead of displaying a disease prediction. This is a heuristic safeguard: it can reject valid images when CLIP is wrong, and matching crop labels do not guarantee a correct diagnosis.
 
 ### How to demonstrate the required cases
 
