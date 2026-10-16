@@ -67,6 +67,36 @@ TRANSLATIONS = {
         "Symptoms to check": "పరిశీలించాల్సిన లక్షణాలు",
         "Suggested next step": "తదుపరి సూచన",
         "Prevention": "నివారణ",
+        "Input scope check": "ఇన్‌పుట్ పరిధి తనిఖీ",
+        "winning scope-category score": "గెలిచిన వర్గ స్కోరు",
+        "supported-crop scope score": "మద్దతు ఉన్న పంట స్కోరు",
+        "Inconclusive / unsupported input": "అనిశ్చిత / మద్దతు లేని ఇన్‌పుట్",
+        "Supported crops represented in this model: apple, blueberry, cherry, corn, grape, orange, peach, bell pepper, potato, raspberry, soybean, squash, strawberry, and tomato.": "ఈ మోడల్ మద్దతు ఇచ్చే పంటలు: ఆపిల్, బ్లూబెర్రీ, చెర్రీ, మొక్కజొన్న, ద్రాక్ష, నారింజ, పీచ్, క్యాప్సికమ్, బంగాళాదుంప, రాస్ప్‌బెర్రీ, సోయాబీన్, స్క్వాష్, స్ట్రాబెర్రీ, టమాటా.",
+        "the top model score is": "మోడల్ అత్యధిక స్కోరు",
+        "below the configured": "నిర్దేశించిన పరిమితి కంటే తక్కువ",
+        "No disease diagnosis is being reported.": "వ్యాధి నిర్ధారణ ఇవ్వడం లేదు.",
+        "Image-screening crop": "చిత్ర తనిఖీ గుర్తించిన పంట",
+        "Disease-model crop": "వ్యాధి మోడల్ గుర్తించిన పంట",
+        "Healthy-class prediction": "ఆరోగ్యకరమైన ఆకు అంచనా",
+        "possible viral disease": "వైరస్ వల్ల కలిగిన వ్యాధి కావచ్చు",
+        "possible bacterial disease": "బాక్టీరియా వల్ల కలిగిన వ్యాధి కావచ్చు",
+        "possible fungal or oomycete disease": "శిలీంధ్రం లేదా శిలీంధ్రసదృశ జీవి వల్ల వ్యాధి కావచ్చు",
+        "plant health": "మొక్క ఆరోగ్యం",
+        "Apple": "ఆపిల్",
+        "Blueberry": "బ్లూబెర్రీ",
+        "Cherry": "చెర్రీ",
+        "Corn": "మొక్కజొన్న",
+        "Grape": "ద్రాక్ష",
+        "Orange": "నారింజ",
+        "Peach": "పీచ్",
+        "Bell Pepper": "క్యాప్సికమ్",
+        "Potato": "బంగాళాదుంప",
+        "Raspberry": "రాస్ప్‌బెర్రీ",
+        "Soybean": "సోయాబీన్",
+        "Squash": "స్క్వాష్",
+        "Strawberry": "స్ట్రాబెర్రీ",
+        "Tomato": "టమాటా",
+        "Healthy": "ఆరోగ్యంగా ఉంది",
         "This image could not be opened. Please upload a valid JPG or PNG.": "ఈ చిత్రాన్ని తెరవలేకపోయాము. సరైన JPG లేదా PNG ఫోటోను అప్‌లోడ్ చేయండి.",
         "The model did not return a prediction.": "మోడల్ ఎలాంటి అంచనాను ఇవ్వలేదు.",
         "Checking image and analyzing the leaf...": "చిత్రాన్ని తనిఖీ చేసి ఆకును విశ్లేషిస్తున్నాము...",
@@ -717,10 +747,7 @@ def main():
     else:
         st.caption(tr("No obvious image-quality issue detected by the basic checks."))
 
-    st.caption(
-        "Plant identification is automatic. If the crop screen and disease model disagree, "
-        "the app will return an inconclusive result instead of a disease prediction."
-    )
+    st.caption(tr("Plant identification is automatic. If the crop screen and disease model disagree, the app will return an inconclusive result instead of a disease prediction."))
 
     if st.button(tr("Analyze Leaf"), type="primary", width="stretch"):
         
@@ -733,25 +760,15 @@ def main():
                 return
 
             scope = decide_input_scope(best_description, supported_score, best_score)
-            st.caption(
-                f"Input scope check: {scope['status'].replace('_', ' ').title()} "
-                f"(winning scope-category score: {best_score:.1%}; supported-crop scope score: {supported_score:.1%})."
-            )
-            st.caption(
-                "These are relative CLIP scores, not calibrated probabilities. "
-                "The scope check can accept or reject images incorrectly."
-            )
+            st.caption(f"{tr('Input scope check')}: {tr(scope['status'].replace('_', ' ').title())} ({tr('winning scope-category score')}: {best_score:.1%}; {tr('supported-crop scope score')}: {supported_score:.1%}).")
+            st.caption(tr("These are relative CLIP scores, not calibrated probabilities. The scope check can accept or reject images incorrectly."))
             if not scope["accepted"]:
-                st.warning(f"Inconclusive / unsupported input: {scope['reason']}")
+                st.warning(f"{tr('Inconclusive / unsupported input')}: {tr(scope['reason'])}")
                 log_prediction(
                     model_version, uploaded_file.name, "NO_PREDICTION",
                     float(best_score), f"REJECTED_{str(scope['status']).upper()}",
                 )
-                st.info(
-                    "Supported crops represented in this model: apple, blueberry, cherry, corn, "
-                    "grape, orange, peach, bell pepper, potato, raspberry, soybean, squash, "
-                    "strawberry, and tomato."
-                )
+                st.info(tr("Supported crops represented in this model: apple, blueberry, cherry, corn, grape, orange, peach, bell pepper, potato, raspberry, soybean, squash, strawberry, and tomato."))
                 return
 
             severe_quality_terms = (
@@ -764,11 +781,8 @@ def main():
                 any(term in warning.lower() for term in severe_quality_terms)
                 for warning in quality_warnings
             ):
-                st.error(
-                    "This image may be too degraded for a reliable prediction. "
-                    "Please upload a sharper, properly lit image with the leaf in focus."
-                )
-                st.info("Disease prediction was not run. Improve the image and try again.")
+                st.error(tr("This image may be too degraded for a reliable prediction. Please upload a sharper, properly lit image with the leaf in focus."))
+                st.info(tr("Disease prediction was not run. Improve the image and try again."))
                 return
 
             image_tensor = transform(image).unsqueeze(0).to(device)
@@ -812,21 +826,11 @@ def main():
                     st.image(image, width="stretch")
                     st.caption(tr("Your uploaded leaf"))
                 with mismatch_text:
-                    st.warning(
-                        "Plant type mismatch: the image-screening model and disease "
-                        "classifier disagree about the crop."
-                    )
-                    st.write(f"**Image-screening crop:** {clip_crop.title()}")
-                    st.write(f"**Disease-model crop:** {plant}")
-                    st.write(
-                        "No disease diagnosis is being reported because the crop "
-                        "predictions do not agree."
-                    )
-                    st.caption(
-                        "This consistency check is a heuristic. Both models can be wrong, "
-                        "and matching crop labels still do not guarantee a correct disease "
-                        "prediction. Try a sharp, close-up photo of one supported crop leaf."
-                    )
+                    st.warning(tr("Plant type mismatch: the image-screening model and disease classifier disagree about the crop."))
+                    st.write(f"**{tr('Image-screening crop')}:** {tr(clip_crop.title())}")
+                    st.write(f"**{tr('Disease-model crop')}:** {tr(plant)}")
+                    st.write(tr("No disease diagnosis is being reported because the crop predictions do not agree."))
+                    st.caption(tr("This consistency check is a heuristic. Both models can be wrong, and matching crop labels still do not guarantee a correct disease prediction. Try a sharp, close-up photo of one supported crop leaf."))
                 return
 
         low_confidence = top_prob < LOW_CONFIDENCE_THRESHOLD
@@ -836,20 +840,12 @@ def main():
                 "REJECTED_LOW_CONFIDENCE",
             )
             st.divider()
-            st.warning(
-                f"Inconclusive result: the top model score is {top_prob:.1%}, below "
-                f"the configured {LOW_CONFIDENCE_THRESHOLD:.0%} threshold. "
-                "No disease diagnosis is being reported."
-            )
+            st.warning(f"{tr('Inconclusive result')}: {tr('the top model score is')} {top_prob:.1%}, {tr('below the configured')} {LOW_CONFIDENCE_THRESHOLD:.0%}. {tr('No disease diagnosis is being reported.')}")
             st.write(tr("Closest model categories (not diagnoses):"))
             for label, probability in predictions:
                 _, _, name = readable_name(label)
                 st.write(f"- {name}: {probability:.1%}")
-            st.caption(
-                "Softmax scores can be overconfident and are not calibrated probabilities. "
-                "This threshold is a demo rejection rule, not a clinically or agriculturally "
-                "validated guarantee. Try a clear, well-lit photo of one supported crop leaf."
-            )
+            st.caption(tr("Softmax scores can be overconfident and are not calibrated probabilities. This threshold is a demo rejection rule, not a clinically or agriculturally validated guarantee. Try a clear, well-lit photo of one supported crop leaf."))
             return
 
         log_prediction(model_version, uploaded_file.name, top_label, top_prob, "MODEL_PREDICTION")
@@ -861,43 +857,29 @@ def main():
             st.image(image, width="stretch")
             st.caption(tr("Your uploaded leaf"))
         with result_text:
-            st.info(
-                "Here’s the model’s closest match after the input checks. It may still be wrong, "
-                "so compare it with visible symptoms."
-            )
-            st.markdown(f"### {display_name}")
-            st.write(f"**Plant:** {plant}")
-            st.write(f"**Possible condition:** {disease}")
+            st.info(tr("Here’s the model’s closest match after the input checks. It may still be wrong, so compare it with visible symptoms."))
+            st.markdown(f"### {tr(display_name)}")
+            st.write(f"**{tr('Plant')}:** {tr(plant)}")
+            st.write(f"**{tr('Possible condition')}:** {tr(disease)}")
             st.metric(tr("Model confidence score"), f"{top_prob:.2%}")
 
-        st.caption(
-            "This score is derived from the model's output. It is not a verified "
-            "probability that the diagnosis is correct. The model can be wrong "
-            "even when its score is high."
-        )
+        st.caption(tr("This score is derived from the model's output. It is not a verified probability that the diagnosis is correct. The model can be wrong even when its score is high."))
 
         if quality_warnings:
-            st.warning(
-                "Image-quality concerns may affect this result. Consider "
-                "uploading a clearer image before relying on the prediction."
-            )
+            st.warning(tr("Image-quality concerns may affect this result. Consider uploading a clearer image before relying on the prediction."))
 
         st.divider()
         st.subheader(tr("Plant Care Guidance"))
 
         guidance = disease_guidance(top_label)
 
-        st.write(f"**Classification category:** {guidance['status']}")
-        st.write(f"**About this result:** {guidance['summary']}")
-        st.write(f"**Symptoms to check:** {guidance['symptoms']}")
-        st.write(f"**Suggested next step:** {guidance['action']}")
-        st.write(f"**Prevention:** {guidance['prevention']}")
+        st.write(f"**{tr('Classification category')}:** {tr(guidance['status'])}")
+        st.write(f"**{tr('About this result')}:** {tr(guidance['summary'])}")
+        st.write(f"**{tr('Symptoms to check')}:** {tr(guidance['symptoms'])}")
+        st.write(f"**{tr('Suggested next step')}:** {tr(guidance['action'])}")
+        st.write(f"**{tr('Prevention')}:** {tr(guidance['prevention'])}")
 
-        st.info(
-            "This guidance is general educational information. The model has not "
-            "confirmed the cause of the symptoms. Do not apply pesticides or "
-            "discard a plant based only on this prediction."
-        )
+        st.info(tr("This guidance is general educational information. The model has not confirmed the cause of the symptoms. Do not apply pesticides or discard a plant based only on this prediction."))
 
         st.divider()
         st.subheader(tr("Other possible matches"))
@@ -910,11 +892,7 @@ def main():
             row_name.write(name)
             row_score.write(f"{probability:.1%}")
 
-        st.caption(
-            "Reliability limitation: this model classifies images into its "
-            "known classes. These checks do not reliably detect every unsupported "
-            "plant, unrelated image, or incorrect high-confidence prediction."
-        )
+        st.caption(tr("Reliability limitation: this model classifies images into its known classes. These checks do not reliably detect every unsupported plant, unrelated image, or incorrect high-confidence prediction."))
 
 
 if __name__ == "__main__":
