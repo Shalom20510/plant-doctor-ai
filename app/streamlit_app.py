@@ -15,8 +15,8 @@ if str(ROOT_DIR) not in sys.path:
 
 from src.input_validation import (
     CROP_PROMPT_VARIANTS, NON_LEAF_PROMPTS, SUPPORTED_CROP_NAMES,
-    SUPPORTED_PROMPTS, UNSUPPORTED_LEAF_PROMPTS, decide_input_scope,
-    crop_name_from_prompt, normalize_crop_name,
+    SUPPORTED_PROMPTS, UNSUPPORTED_LEAF_PROMPTS, aggregate_scope_logits,
+    decide_input_scope, crop_name_from_prompt, normalize_crop_name,
 )
 
 LOG_FILE = ROOT_DIR / "logs" / "predictions.log"
@@ -65,42 +65,32 @@ def validate_plant_image(image):
         outputs = model(**inputs)
         logits = outputs.logits_per_image[0]
 
-    # Average several distinct descriptions for each crop, reducing reliance
-    # on a single prompt's wording. The crop-specific morphology description is
-    # only one prompt among several; this is still a heuristic CLIP screen.
-    crop_logits = []
+    # Keep the raw prompt logits and let the tested helper average within each
+    # crop, then compare supported crops against unsupported leaf/non-leaf groups.
+    crop_prompt_scores = {}
     offset = 0
     for crop in SUPPORTED_CROP_NAMES:
         prompt_count = len(CROP_PROMPT_VARIANTS[crop])
-        crop_logits.append(logits[offset:offset + prompt_count].mean())
+        crop_prompt_scores[crop] = [
+            float(value.item()) for value in logits[offset:offset + prompt_count]
+        ]
         offset += prompt_count
-    crop_logits = torch.stack(crop_logits)
-    supported_local_index = int(crop_logits.argmax().item())
-    best_supported_logit = crop_logits[supported_local_index]
 
     unsupported_start = len(crop_descriptions)
     nonleaf_start = unsupported_start + len(UNSUPPORTED_LEAF_PROMPTS)
-    unsupported_logit = logits[unsupported_start:nonleaf_start].mean()
-    nonleaf_logits = logits[nonleaf_start:]
-    group_logits = torch.stack([
-        best_supported_logit,
-        unsupported_logit,
-        nonleaf_logits.max(),
-    ])
-    group_scores = group_logits.softmax(dim=0)
-    group_index = int(group_scores.argmax().item())
+    unsupported_prompt_scores = [
+        float(value.item()) for value in logits[unsupported_start:nonleaf_start]
+    ]
+    non_leaf_prompt_scores = {
+        prompt: float(logits[nonleaf_start + index].item())
+        for index, prompt in enumerate(NON_LEAF_PROMPTS)
+    }
 
-    if group_index == 0:
-        best_description = SUPPORTED_PROMPTS[supported_local_index]
-    elif group_index == 1:
-        best_description = UNSUPPORTED_LEAF_PROMPTS[0]
-    else:
-        nonleaf_local_index = int(nonleaf_logits.argmax().item())
-        best_description = NON_LEAF_PROMPTS[nonleaf_local_index]
-
-    best_score = float(group_scores[group_index].item())
-    supported_score = float(group_scores[0].item())
-    return best_description, best_score, supported_score
+    return aggregate_scope_logits(
+        crop_prompt_scores,
+        unsupported_prompt_scores,
+        non_leaf_prompt_scores,
+    )
 
 
 
