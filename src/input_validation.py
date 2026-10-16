@@ -4,6 +4,8 @@ CLIP prompt scores are relative similarities, not calibrated probabilities.
 """
 from __future__ import annotations
 
+import math
+
 SUPPORTED_CROP_NAMES = (
     "apple", "blueberry", "cherry", "corn", "grape", "orange", "peach",
     "bell pepper", "potato", "raspberry", "soybean", "squash", "strawberry",
@@ -71,6 +73,58 @@ NON_LEAF_PROMPTS = (
 )
 
 SCOPE_THRESHOLD = 0.28
+
+
+def aggregate_scope_logits(
+    crop_prompt_scores: dict[str, list[float]],
+    unsupported_prompt_scores: list[float],
+    non_leaf_prompt_scores: dict[str, float],
+) -> tuple[str, float, float]:
+    """Aggregate raw CLIP logits across templates and return (label, best score, supported score).
+
+    Scores are raw image-text logits, not calibrated probabilities. Crop templates
+    are averaged within each crop so each crop gets equal weight irrespective of
+    the number of prompt variants.
+    """
+    if set(crop_prompt_scores) != set(SUPPORTED_CROP_NAMES):
+        raise ValueError("crop_prompt_scores must contain exactly the supported crop names")
+    if any(not values for values in crop_prompt_scores.values()):
+        raise ValueError("Every supported crop must have at least one prompt score")
+    if not unsupported_prompt_scores or not non_leaf_prompt_scores:
+        raise ValueError("At least one unsupported-leaf and one non-leaf score are required")
+
+    all_scores = [
+        score for values in crop_prompt_scores.values() for score in values
+    ] + list(unsupported_prompt_scores) + list(non_leaf_prompt_scores.values())
+    if any(not math.isfinite(float(score)) for score in all_scores):
+        raise ValueError("Prompt scores must all be finite numbers")
+
+    mean_crop_logits = {
+        crop: sum(values) / len(values)
+        for crop, values in crop_prompt_scores.items()
+    }
+    best_crop = max(mean_crop_logits, key=mean_crop_logits.get)
+    best_supported_logit = mean_crop_logits[best_crop]
+    unsupported_logit = sum(unsupported_prompt_scores) / len(unsupported_prompt_scores)
+    best_non_leaf_prompt, best_non_leaf_logit = max(
+        non_leaf_prompt_scores.items(), key=lambda item: item[1]
+    )
+
+    group_logits = [best_supported_logit, unsupported_logit, best_non_leaf_logit]
+    max_logit = max(group_logits)
+    exp_scores = [math.exp(value - max_logit) for value in group_logits]
+    denominator = sum(exp_scores)
+    group_scores = [value / denominator for value in exp_scores]
+    winner = max(range(len(group_scores)), key=group_scores.__getitem__)
+
+    if winner == 0:
+        description = SUPPORTED_PROMPTS[SUPPORTED_CROP_NAMES.index(best_crop)]
+    elif winner == 1:
+        description = UNSUPPORTED_LEAF_PROMPT
+    else:
+        description = best_non_leaf_prompt
+
+    return description, group_scores[winner], group_scores[0]
 
 
 def normalize_crop_name(value: str) -> str:
