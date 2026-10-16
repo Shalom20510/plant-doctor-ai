@@ -85,6 +85,12 @@ The Streamlit app runs two separate checks before showing a disease result:
 
 For supported-candidate images that pass both checks, the app displays the predicted crop/disease category, model score, alternatives, and general care information. A score of 60% is a prototype decision threshold, not a verified probability that the prediction is correct.
 
+### Optional user-confirmed crop mode
+
+The UI offers **Automatic (recommended)** and an optional crop selector. Automatic mode requires the CLIP screen and disease classifier to agree on the crop; otherwise, it returns an inconclusive mismatch result. When a user explicitly confirms a crop (for example, Tomato), the disease classifier is restricted to that crop's available classes and reports its condition score among those classes.
+
+This mode is useful when the user knows the crop but the automatic crop screen confuses visually similar leaves. It does **not** independently verify the selected species and can still return the wrong condition. Scores in user-confirmed crop mode are conditional on that crop's class subset, so they should not be compared directly with scores from automatic all-class mode. Never describe this as a model accuracy improvement without a labeled evaluation.
+
 ### How to demonstrate the required cases
 
 Run the app and test these separate inputs:
