@@ -4,7 +4,7 @@
 
 - **Non-leaf screening:** CLIP compares the uploaded image with person, building, vehicle, food, animal, and unrelated-object prompts. If a non-leaf category wins, the disease classifier is not run.
 - **Unsupported plant screening:** CLIP compares supported crop prompts with prompts for unsupported/unknown plant leaves. If the unsupported-leaf category wins, the app returns an unsupported result.
-- **Ambiguous image screening:** CLIP now also compares an explicit unclear/blurry/ambiguous-image prompt. Basic image-quality checks flag very small images, unusual framing, blur, extreme brightness, and busy backgrounds. These are heuristics, not a trained quality classifier.
+- **Ambiguous image screening:** The live CLIP screen rejects low supported-crop scope scores, while basic image-quality checks flag very small images, unusual framing, blur, extreme brightness, and busy backgrounds. The live screen does not currently compare a separate ambiguity prompt. These are heuristics, not a trained quality classifier.
 - **Disease confidence rejection:** the app rejects predictions below `LOW_CONFIDENCE_THRESHOLD = 0.60` and shows an inconclusive result rather than disease guidance.
 - **Crop consistency:** the UI uses automatic screening only. If the CLIP crop and disease-model crop disagree, the app returns an inconclusive result rather than displaying a disease prediction. There is no manual crop selector.
 - **Communication:** rejected inputs display a reason, state that disease prediction was not run, and explain that CLIP scores are relative rather than calibrated probabilities.
@@ -26,7 +26,7 @@ The dataset-free tests cover:
 - ambiguous/low-scope rejection;
 - low disease-model score rejection through the app's confidence rule;
 - aggregation of multiple crop prompts;
-- rejection when the ambiguous prompt wins;
+- ambiguous/low-scope rejection rules;
 - crop-conditioned prediction not returning labels from another crop.
 
 These are **unit/integration tests using deterministic inputs or mocked model outputs**. They verify software behavior; they do not measure real-world plant-identification accuracy.
@@ -55,6 +55,6 @@ A successful, independently verified disease prediction on a supported crop, a r
 ## Recommended demo sequence
 
 1. Upload the known photo of people and show the **Non Leaf** rejection.
-2. Upload a clear photo of a supported crop; choose its crop in the selector and show the crop-conditioned model output. State that this is a model prediction, not ground-truth validation, unless independently verified.
+2. Upload a clear photo of a supported crop and show the automatic model output. State that this is a model prediction, not ground-truth validation, unless independently verified.
 3. Upload a blurry or unclear leaf and show an inconclusive result if the quality/scope checks reject it.
 4. Explain that the prototype blocks some unreliable inputs but is not yet validated for reliable field diagnosis.
