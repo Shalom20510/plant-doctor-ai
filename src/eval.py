@@ -31,7 +31,7 @@ from src.model import load_model
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Evaluate a trained plant-disease model.")
     parser.add_argument("--data_dir", type=Path, default=Path("data/plantvillage/color"))
-    parser.add_argument("--checkpoint", type=Path, default=Path("artifacts/model_v1.pt"))
+    parser.add_argument("--checkpoint", type=Path, default=Path("artifacts/models/model_v1.pt"))
     parser.add_argument("--output_dir", type=Path, default=Path("artifacts/evaluation"))
     parser.add_argument("--batch_size", type=int, default=16)
     parser.add_argument("--num_workers", type=int, default=0)
