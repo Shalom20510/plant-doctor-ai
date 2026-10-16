@@ -303,7 +303,9 @@ def main():
         return
 
     try:
-        image = ImageOps.exif_transpose(Image.open(uploaded_file)).convert("RGB")
+        source_image = Image.open(uploaded_file)
+        exif_orientation = source_image.getexif().get(274, 1)
+        image = ImageOps.exif_transpose(source_image).convert("RGB")
     except Exception:
         st.error("This image could not be opened. Please upload a valid JPG or PNG.")
         return
@@ -312,6 +314,11 @@ def main():
     st.image(image, use_container_width=True)
 
     quality_warnings = image_quality_checks(image)
+    if exif_orientation in (3, 6, 8):
+        quality_warnings.append(
+            "The photo contained rotated orientation metadata; the app corrected "
+            "the display orientation automatically."
+        )
 
     if quality_warnings:
         st.warning("Image quality check")
