@@ -67,6 +67,37 @@ TRANSLATIONS = {
         "Symptoms to check": "పరిశీలించాల్సిన లక్షణాలు",
         "Suggested next step": "తదుపరి సూచన",
         "Prevention": "నివారణ",
+        "Noticed something unusual on a leaf? Add a photo and we’ll help you explore what might be happening, with practical next steps.": "ఆకుపై ఏదైనా అసాధారణంగా కనిపిస్తుందా? ఫోటోను జోడించండి. సాధ్యమైన సమస్యను అర్థం చేసుకోవడానికి సహాయం పొందండి.",
+        "For the clearest result, photograph one leaf in natural light and get close enough to see the details.": "మంచి ఫలితం కోసం సహజ కాంతిలో ఒక ఆకును దగ్గరగా, స్పష్టంగా ఫోటో తీయండి.",
+        "JPG or PNG. A close, focused photo works best.": "JPG లేదా PNG. దగ్గరగా, స్పష్టంగా తీసిన ఫోటో ఉత్తమం.",
+        "How to take a useful leaf photo": "ఆకు ఫోటోను సరిగ్గా ఎలా తీయాలి",
+        "Fill the frame with one leaf so the affected area is easy to see.": "ప్రభావిత భాగం స్పష్టంగా కనిపించేలా ఒక ఆకును ఫ్రేమ్‌లో నింపండి.",
+        "✓ Good photo": "✓ మంచి ఫోటో",
+        "One clear leaf, sharp details, natural light.": "ఒక స్పష్టమైన ఆకు, పదునైన వివరాలు, సహజ కాంతి.",
+        "✕ Too blurry": "✕ చాలా అస్పష్టంగా ఉంది",
+        "Hold the camera steady and tap to focus.": "కెమెరాను స్థిరంగా ఉంచి ఫోకస్ చేయండి.",
+        "✕ Too dark": "✕ చాలా చీకటిగా ఉంది",
+        "Move to bright shade or soft daylight.": "మంచి వెలుతురు ఉన్న నీడలో ఫోటో తీయండి.",
+        "✕ Too many leaves": "✕ చాలా ఆకులు ఉన్నాయి",
+        "Frame just one leaf and its affected area.": "ఒక ఆకును, దాని ప్రభావిత భాగాన్ని మాత్రమే ఫ్రేమ్‌లో ఉంచండి.",
+        "Get close": "దగ్గరగా తీయండి",
+        "Keep one leaf large in the frame.": "ఒక ఆకు ఫ్రేమ్‌లో పెద్దగా కనిపించేలా ఉంచండి.",
+        "Use daylight": "పగటి కాంతిని ఉపయోగించండి",
+        "Avoid strong shadows and glare.": "తీవ్రమైన నీడలు, కాంతి మెరుపులను నివారించండి.",
+        "Keep it steady": "కెమెరాను స్థిరంగా ఉంచండి",
+        "Keep the leaf details sharp.": "ఆకులోని వివరాలు స్పష్టంగా ఉండేలా చూడండి.",
+        "Your photo is checked for basic quality before the disease classifier runs.": "వ్యాధిని అంచనా వేసే ముందు మీ ఫోటో నాణ్యతను ప్రాథమికంగా తనిఖీ చేస్తాము.",
+        "Check that the leaf is visible and the affected area is in focus.": "ఆకు స్పష్టంగా కనిపిస్తోందో, ప్రభావిత భాగం ఫోకస్‌లో ఉందో చూడండి.",
+        "The image-quality checks below may recommend a clearer photo.": "చిత్ర నాణ్యత తనిఖీలు మరింత స్పష్టమైన ఫోటోను సూచించవచ్చు.",
+        "These are relative CLIP scores, not calibrated probabilities. The scope check can accept or reject images incorrectly.": "ఇవి CLIP సాపేక్ష స్కోర్లు మాత్రమే; ధృవీకరించిన సంభావ్యతలు కావు. ఈ తనిఖీ చిత్రాన్ని తప్పుగా అంగీకరించవచ్చు లేదా తిరస్కరించవచ్చు.",
+        "Plant type mismatch: the image-screening model and disease classifier disagree about the crop.": "మొక్క రకం సరిపోలలేదు: చిత్ర తనిఖీ మోడల్, వ్యాధి మోడల్ వేర్వేరు పంటలను గుర్తించాయి.",
+        "No disease diagnosis is being reported because the crop predictions do not agree.": "పంట గుర్తింపులు సరిపోలనందున వ్యాధి నిర్ధారణ ఇవ్వడం లేదు.",
+        "Here’s the model’s closest match after the input checks. It may still be wrong, so compare it with visible symptoms.": "ఇన్‌పుట్ తనిఖీల తర్వాత మోడల్‌కు దగ్గరగా సరిపోయిన ఫలితం ఇది. ఇది తప్పు కావచ్చు; కనిపించే లక్షణాలతో పోల్చి చూడండి.",
+        "Classification category": "వర్గీకరణ",
+        "About this result": "ఈ ఫలితం గురించి",
+        "Symptoms to check": "పరిశీలించాల్సిన లక్షణాలు",
+        "Suggested next step": "తదుపరి సూచన",
+        "Prevention": "నివారణ",
     },
 }
 def tr(text):
@@ -551,14 +582,14 @@ def main():
     with left:
         st.markdown("## " + tr("What's happening to your plant?"))
         st.markdown(
-            '<p class="plant-intro">Noticed something unusual on a leaf? Add a photo and we’ll help you explore what might be happening, with practical next steps.</p>',
+            '<p class="plant-intro">{tr("Noticed something unusual on a leaf? Add a photo and we’ll help you explore what might be happening, with practical next steps.")}</p>',
             unsafe_allow_html=True,
         )
-        st.markdown('<div class="plant-note">For the clearest result, photograph one leaf in natural light and get close enough to see the details.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="plant-note">{tr("For the clearest result, photograph one leaf in natural light and get close enough to see the details.")}</div>', unsafe_allow_html=True)
         uploaded_file = st.file_uploader(
             "Choose a leaf photo",
             type=["jpg", "jpeg", "png"],
-            help="JPG or PNG. A close, focused photo works best.",
+            help="{tr("JPG or PNG. A close, focused photo works best.")}",
             label_visibility="visible",
         )
         st.caption(tr("JPG or PNG · Clear, well-lit leaf photos work best"))
@@ -604,24 +635,24 @@ def main():
                   <text x="358" y="266" font-size="10" font-family="Arial, sans-serif" fill="#586458">Show spots and edges</text>
                 </svg>
               </div>
-              <div class="guide-heading">How to take a useful leaf photo</div>
-              <div class="guide-subtitle">Fill the frame with one leaf so the affected area is easy to see.</div>
+              <div class="guide-heading">{tr("How to take a useful leaf photo")}</div>
+              <div class="guide-subtitle">{tr("Fill the frame with one leaf so the affected area is easy to see.")}</div>
               <div class="guide-examples">
                 <div class="guide-example">
-                  <strong>✓ Good photo</strong>
-                  <span>One clear leaf, sharp details, natural light.</span>
+                  <strong>{tr("✓ Good photo")}</strong>
+                  <span>{tr("One clear leaf, sharp details, natural light.")}</span>
                 </div>
                 <div class="guide-example bad">
-                  <strong>✕ Too blurry</strong>
-                  <span>Hold the camera steady and tap to focus.</span>
+                  <strong>{tr("✕ Too blurry")}</strong>
+                  <span>{tr("Hold the camera steady and tap to focus.")}</span>
                 </div>
                 <div class="guide-example bad">
-                  <strong>✕ Too dark</strong>
-                  <span>Move to bright shade or soft daylight.</span>
+                  <strong>{tr("✕ Too dark")}</strong>
+                  <span>{tr("Move to bright shade or soft daylight.")}</span>
                 </div>
                 <div class="guide-example bad">
-                  <strong>✕ Too many leaves</strong>
-                  <span>Frame just one leaf and its affected area.</span>
+                  <strong>{tr("✕ Too many leaves")}</strong>
+                  <span>{tr("Frame just one leaf and its affected area.")}</span>
                 </div>
               </div>
             </div>
