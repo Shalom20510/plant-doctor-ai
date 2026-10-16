@@ -11,6 +11,7 @@ from PIL import Image, UnidentifiedImageError
 from torchvision import transforms
 
 from src.model import load_model as load_checkpoint_model
+from src.input_validation import normalize_crop_name
 
 
 IMAGE_SIZE = 224
@@ -86,6 +87,51 @@ def predict_topk(
         if index not in idx_to_class:
             raise ValueError(f"Predicted class index {index} is missing from the class map.")
         predictions.append((idx_to_class[index], float(score)))
+    return predictions
+
+
+def predict_topk_for_crop(
+    model: torch.nn.Module,
+    image_tensor: torch.Tensor,
+    idx_to_class: dict[int, str],
+    device: str | torch.device,
+    crop_name: str,
+    top_k: int = 5,
+) -> list[tuple[str, float]]:
+    """Predict among one user-confirmed crop's classes only.
+
+    Returned scores are softmax scores conditional on the selected crop's
+    classes. They are not comparable to global 38-class scores and they do not
+    independently verify that the uploaded plant really is that crop.
+    """
+    if top_k < 1:
+        raise ValueError("top_k must be at least 1.")
+    selected_crop = normalize_crop_name(crop_name)
+    matching_indices = []
+    for index, label in idx_to_class.items():
+        raw_crop = label.partition("___")[0]
+        if normalize_crop_name(raw_crop) == selected_crop:
+            matching_indices.append((int(index), label))
+
+    if not matching_indices:
+        raise ValueError(f"No model classes are available for crop '{crop_name}'.")
+
+    model.eval()
+    with torch.inference_mode():
+        logits = model(image_tensor.to(device))
+        if logits.ndim != 2 or logits.shape[0] != 1:
+            raise RuntimeError("Model returned an unexpected output shape.")
+        indices = [index for index, _ in matching_indices]
+        if max(indices) >= logits.shape[1] or min(indices) < 0:
+            raise ValueError("The crop class mapping does not match model output indices.")
+        probabilities = torch.softmax(logits[0, indices], dim=0)
+        count = min(top_k, probabilities.numel())
+        scores, local_indices = torch.topk(probabilities, k=count)
+
+    predictions = []
+    for score, local_index in zip(scores.cpu().tolist(), local_indices.cpu().tolist()):
+        class_index = indices[local_index]
+        predictions.append((idx_to_class[class_index], float(score)))
     return predictions
 
 
