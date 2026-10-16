@@ -48,6 +48,16 @@ def main() -> None:
         ),
     )
 
+    resolved_checkpoint = Path(checkpoint_path).expanduser()
+    if not resolved_checkpoint.is_absolute():
+        resolved_checkpoint = PROJECT_ROOT / resolved_checkpoint
+    if not resolved_checkpoint.is_file():
+        st.warning(
+            "No trained model checkpoint is available at the selected path. "
+            "You can explore the interface, but real predictions will remain "
+            "unavailable until a compatible plant-disease checkpoint is added."
+        )
+
     if uploaded_file is not None:
         st.subheader("Uploaded image")
         st.image(uploaded_file, caption=uploaded_file.name, use_container_width=True)
