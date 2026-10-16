@@ -692,6 +692,54 @@ def main():
         top_label, top_prob = predictions[0]
         plant, disease, display_name = readable_name(top_label)
 
+        # Cross-check the crop selected by CLIP against the crop predicted by
+        # the disease classifier. This is a conservative heuristic, not proof
+        # that either model identified the plant correctly.
+        if best_description in SUPPORTED_PROMPTS:
+            clip_crop = best_description.split(" photograph of a ", 1)[-1].split(
+                " leaf", 1
+            )[0].strip().lower()
+            def normalize_crop_name(value):
+                normalized = " ".join(value.lower().replace("_", " ").replace(",", " ").split())
+                aliases = {
+                    "pepper bell": "bell pepper",
+                    "corn maize": "corn",
+                    "cherry including sour": "cherry",
+                }
+                return aliases.get(normalized, normalized)
+
+            if normalize_crop_name(clip_crop) != normalize_crop_name(plant):
+                log_prediction(
+                    model_version,
+                    uploaded_file.name,
+                    top_label,
+                    top_prob,
+                    "REJECTED_CROP_MISMATCH",
+                )
+                st.divider()
+                st.markdown("## Inconclusive result")
+                mismatch_image, mismatch_text = st.columns([0.9, 1.1], gap="large")
+                with mismatch_image:
+                    st.image(image, width="stretch")
+                    st.caption("Your uploaded leaf")
+                with mismatch_text:
+                    st.warning(
+                        "Plant type mismatch: the image-screening model and disease "
+                        "classifier disagree about the crop."
+                    )
+                    st.write(f"**Image-screening crop:** {clip_crop.title()}")
+                    st.write(f"**Disease-model crop:** {plant}")
+                    st.write(
+                        "No disease diagnosis is being reported because the crop "
+                        "predictions do not agree."
+                    )
+                    st.caption(
+                        "This consistency check is a heuristic. Both models can be wrong, "
+                        "and matching crop labels still do not guarantee a correct disease "
+                        "prediction. Try a sharp, close-up photo of one supported crop leaf."
+                    )
+                return
+
         low_confidence = top_prob < LOW_CONFIDENCE_THRESHOLD
         if low_confidence:
             log_prediction(
