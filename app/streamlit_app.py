@@ -373,8 +373,14 @@ def main():
         st.error("This image could not be opened. Please upload a valid JPG or PNG.")
         return
 
-    st.subheader("Uploaded Leaf")
-    st.image(image, use_container_width=True)
+    st.subheader("Your photo")
+    photo_col, space_col = st.columns([0.72, 0.28], gap="large")
+    with photo_col:
+        st.image(image, width="stretch")
+    with space_col:
+        st.markdown("**Before analysis**")
+        st.caption("Check that the leaf is visible and the affected area is in focus.")
+        st.caption("The image-quality checks below may recommend a clearer photo.")
 
     quality_warnings = image_quality_checks(image)
     if exif_orientation in (3, 6, 8):
@@ -390,7 +396,7 @@ def main():
     else:
         st.caption("No obvious image-quality issue detected by the basic checks.")
 
-    if st.button("Analyze Leaf", type="primary", use_container_width=True):
+    if st.button("Analyze Leaf", type="primary", width="stretch"):
         
         with st.spinner("Checking image and analyzing the leaf..."):
             try:
@@ -481,7 +487,7 @@ def main():
         st.markdown("## What we noticed")
         result_image, result_text = st.columns([0.9, 1.1], gap="large")
         with result_image:
-            st.image(image, use_container_width=True)
+            st.image(image, width="stretch")
             st.caption("Your uploaded leaf")
         with result_text:
             if low_confidence:
