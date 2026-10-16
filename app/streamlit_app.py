@@ -14,7 +14,7 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
 from src.input_validation import (
-    CROP_PROMPT_VARIANTS, NON_LEAF_PROMPTS, SUPPORTED_CROP_NAMES,
+    AMBIGUOUS_PROMPT, CROP_PROMPT_VARIANTS, NON_LEAF_PROMPTS, SUPPORTED_CROP_NAMES,
     SUPPORTED_PROMPTS, UNSUPPORTED_LEAF_PROMPTS, aggregate_scope_logits,
     decide_input_scope, crop_name_from_prompt, normalize_crop_name,
 )
@@ -59,7 +59,10 @@ def validate_plant_image(image):
         for prompt in CROP_PROMPT_VARIANTS[crop]
     ]
     crop_descriptions = [prompt for _, prompt in crop_prompt_pairs]
-    descriptions = crop_descriptions + list(UNSUPPORTED_LEAF_PROMPTS) + list(NON_LEAF_PROMPTS)
+    descriptions = (
+        crop_descriptions + list(UNSUPPORTED_LEAF_PROMPTS)
+        + [AMBIGUOUS_PROMPT] + list(NON_LEAF_PROMPTS)
+    )
     inputs = processor(text=descriptions, images=image, return_tensors="pt", padding=True)
 
     with torch.no_grad():
@@ -91,6 +94,7 @@ def validate_plant_image(image):
         crop_prompt_scores,
         unsupported_prompt_scores,
         non_leaf_prompt_scores,
+        ambiguous_prompt_score=ambiguous_prompt_score,
     )
 
 
