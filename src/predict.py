@@ -160,7 +160,7 @@ def predict_image(
     if top_k < 1:
         raise ValueError("top_k must be at least 1.")
 
-    model, class_names, selected_device = load_model(checkpoint_path, device)
+    model, class_names, selected_device = load_checkpoint_model(checkpoint_path, device)
     image = load_image(image_source)
     batch = preprocess_image(image).to(selected_device)
 
