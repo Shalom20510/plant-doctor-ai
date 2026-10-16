@@ -67,6 +67,23 @@ TRANSLATIONS = {
         "Symptoms to check": "పరిశీలించాల్సిన లక్షణాలు",
         "Suggested next step": "తదుపరి సూచన",
         "Prevention": "నివారణ",
+        "Healthy-class prediction": "ఆరోగ్యకరమైన ఆకు అంచనా",
+        "Possible Viral Disease": "వైరస్ వల్ల కలిగిన వ్యాధి కావచ్చు",
+        "Possible Bacterial Disease": "బాక్టీరియా వల్ల కలిగిన వ్యాధి కావచ్చు",
+        "Possible Fungal Or Oomycete Disease": "శిలీంధ్రం లేదా శిలీంధ్రసదృశ జీవి వల్ల వ్యాధి కావచ్చు",
+        "Plant Health": "మొక్క ఆరోగ్యం",
+        "This image has low resolution. Try a larger, clearer photograph.": "ఈ చిత్రం తక్కువ రిజల్యూషన్‌లో ఉంది. మరింత పెద్ద, స్పష్టమైన ఫోటోను ఉపయోగించండి.",
+        "The framing is unusually wide or tall. Reframe the leaf closer to the center.": "చిత్ర ఫ్రేమ్ చాలా వెడల్పుగా లేదా పొడవుగా ఉంది. ఆకును మధ్యలోకి తీసుకుని మళ్లీ ఫోటో తీయండి.",
+        "This image is very dark. Try taking the photo in brighter, indirect light.": "ఈ చిత్రం చాలా చీకటిగా ఉంది. మరింత ప్రకాశవంతమైన పరోక్ష కాంతిలో ఫోటో తీయండి.",
+        "This image is overexposed. Avoid direct glare and try softer light.": "ఈ చిత్రం అధిక కాంతితో ఉంది. నేరుగా పడే మెరుపును నివారించి మృదువైన కాంతిలో ఫోటో తీయండి.",
+        "The image appears blurry or lacks detail. Hold the camera steady and focus on the leaf.": "చిత్రం అస్పష్టంగా ఉంది లేదా వివరాలు కనిపించడం లేదు. కెమెరాను స్థిరంగా ఉంచి ఆకుపై ఫోకస్ చేయండి.",
+        "The photo contained rotated orientation metadata; the app corrected the display orientation automatically.": "ఫోటోలో తిప్పబడిన దిశ సమాచారం ఉంది; యాప్ చిత్ర దిశను స్వయంచాలకంగా సరిచేసింది.",
+        "REJECTED_UNSUPPORTED_LEAF": "మద్దతు లేని ఆకు చిత్రం",
+        "REJECTED_NON_LEAF": "ఆకు కాని చిత్రం",
+        "REJECTED_AMBIGUOUS": "స్పష్టత లేని చిత్రం",
+        "unsupported_leaf": "మద్దతు లేని ఆకు చిత్రం",
+        "non_leaf": "ఆకు కాని చిత్రం",
+        "ambiguous": "స్పష్టత లేని చిత్రం",
         "Input scope check": "ఇన్‌పుట్ పరిధి తనిఖీ",
         "winning scope-category score": "గెలిచిన వర్గ స్కోరు",
         "supported-crop scope score": "మద్దతు ఉన్న పంట స్కోరు",
@@ -743,7 +760,7 @@ def main():
     if quality_warnings:
         st.warning(tr("Image quality check"))
         for warning in quality_warnings:
-            st.write(f"• {warning}")
+            st.write(f"• {tr(warning)}")
     else:
         st.caption(tr("No obvious image-quality issue detected by the basic checks."))
 
@@ -844,7 +861,7 @@ def main():
             st.write(tr("Closest model categories (not diagnoses):"))
             for label, probability in predictions:
                 _, _, name = readable_name(label)
-                st.write(f"- {name}: {probability:.1%}")
+                st.write(f"- {tr(name)}: {probability:.1%}")
             st.caption(tr("Softmax scores can be overconfident and are not calibrated probabilities. This threshold is a demo rejection rule, not a clinically or agriculturally validated guarantee. Try a clear, well-lit photo of one supported crop leaf."))
             return
 
@@ -858,7 +875,7 @@ def main():
             st.caption(tr("Your uploaded leaf"))
         with result_text:
             st.info(tr("Here’s the model’s closest match after the input checks. It may still be wrong, so compare it with visible symptoms."))
-            st.markdown(f"### {tr(display_name)}")
+            st.markdown(f"### {tr(plant)} — {tr(disease)}")
             st.write(f"**{tr('Plant')}:** {tr(plant)}")
             st.write(f"**{tr('Possible condition')}:** {tr(disease)}")
             st.metric(tr("Model confidence score"), f"{top_prob:.2%}")
