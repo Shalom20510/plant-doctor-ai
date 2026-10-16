@@ -6,7 +6,7 @@
 - **Unsupported plant screening:** CLIP compares supported crop prompts with prompts for unsupported/unknown plant leaves. If the unsupported-leaf category wins, the app returns an unsupported result.
 - **Ambiguous image screening:** CLIP now also compares an explicit unclear/blurry/ambiguous-image prompt. Basic image-quality checks flag very small images, unusual framing, blur, extreme brightness, and busy backgrounds. These are heuristics, not a trained quality classifier.
 - **Disease confidence rejection:** the app rejects predictions below `LOW_CONFIDENCE_THRESHOLD = 0.60` and shows an inconclusive result rather than disease guidance.
-- **Crop consistency:** in automatic mode, if the CLIP crop and disease model crop disagree, the app returns an inconclusive result. The user can select a known crop; inference is then limited to that crop's available classes.
+- **Crop consistency:** the UI uses automatic screening only. If the CLIP crop and disease-model crop disagree, the app returns an inconclusive result rather than displaying a disease prediction. There is no manual crop selector.
 - **Communication:** rejected inputs display a reason, state that disease prediction was not run, and explain that CLIP scores are relative rather than calibrated probabilities.
 
 ## Evaluation evidence
@@ -48,7 +48,7 @@ A successful, independently verified disease prediction on a supported crop, a r
 - CLIP's crop score is a relative similarity score and is not a calibrated probability of crop identity.
 - The 0.28 scope threshold and 0.60 disease-score threshold are heuristics; neither has been calibrated on a labeled rejection dataset.
 - Softmax scores can be high even for a wrong class. Selecting a crop limits the candidate disease classes but does not verify that the user selected the correct plant or guarantee the condition is correct.
-- A model result of “healthy” must not be treated as proof that a plant is disease-free.
+- A model result of “healthy” must not be treated as proof that a plant is disease-free. The app no longer asks users to select a crop, because that would shift plant identification to the user instead of demonstrating automatic screening.
 - The training dataset is not present in this repository, so a full held-out evaluation, threshold calibration, and retraining/fine-tuning on real field photos have not been performed.
 - Image-quality checks and CLIP screening can both falsely accept or reject images. Users should take a clear, well-lit close-up of one leaf and seek expert confirmation before making treatment decisions.
 
