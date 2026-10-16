@@ -80,9 +80,38 @@ def main() -> None:
     dataset = datasets.ImageFolder(args.data_dir)
     if dataset.classes != class_names:
         raise ValueError("Dataset class names/order do not match checkpoint class order. Align labels before evaluating.")
-    indices = list(range(len(dataset)))
+    # Select a deterministic, approximately class-balanced subset for quick runs.
+    # Taking the first N ImageFolder samples would overrepresent the first class.
+    by_class: dict[int, list[int]] = {}
+    for sample_index, target in enumerate(dataset.targets):
+        by_class.setdefault(int(target), []).append(sample_index)
+
+    rng = random.Random(args.seed)
+    for class_indices in by_class.values():
+        rng.shuffle(class_indices)
+
     if args.max_images:
-        indices = indices[:args.max_images]
+        if args.max_images < len(by_class):
+            print(
+                f"WARNING: --max_images={args.max_images} is smaller than the "
+                f"{len(by_class)} classes; some classes cannot be represented."
+            )
+        indices = []
+        class_ids = sorted(by_class)
+        # Round-robin selection balances classes as far as the cap allows.
+        while len(indices) < min(args.max_images, len(dataset)):
+            added_this_round = False
+            for class_id in class_ids:
+                if by_class[class_id]:
+                    indices.append(by_class[class_id].pop())
+                    added_this_round = True
+                    if len(indices) >= args.max_images:
+                        break
+            if not added_this_round:
+                break
+    else:
+        indices = list(range(len(dataset)))
+
     if not indices:
         raise RuntimeError("No images found in dataset.")
 
@@ -115,6 +144,10 @@ def main() -> None:
         "checkpoint": str(args.checkpoint), "dataset": str(args.data_dir),
         "device": str(model_device), "num_classes": len(class_names),
         "images_requested": len(indices), "unreadable_images_skipped": skipped,
+        "sampling": (
+            "deterministic approximately class-balanced subset"
+            if args.max_images else "all dataset images"
+        ),
         "seed": args.seed, "conditions": {},
         "limitations": [
             "Synthetic transformations are stress tests, not a substitute for real field photographs.",
