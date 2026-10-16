@@ -26,7 +26,7 @@ from src.predict import (
 st.set_page_config(
     page_title="Plant Doctor AI",
     page_icon="🌿",
-    layout="centered",
+    layout="wide",
 )
 
 LOW_CONFIDENCE_THRESHOLD = 0.60
@@ -278,12 +278,47 @@ def log_prediction(model_version, image_name, label, probability, status):
         )
 
 
-def main():
-    st.title("🌿 Plant Doctor AI")
-    st.write(
-        "Upload a plant leaf photo to explore a possible disease classification "
-        "and general plant-care guidance."
+def inject_human_ui():
+    """Apply a restrained, editorial gardening-site style without changing model behavior."""
+    st.markdown(
+        """
+        <style>
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap');
+        :root { --leaf: #426747; --leaf-dark: #203d2b; --ink: #26332a; --muted: #687267; --paper: #faf9f4; --line: #e3e3d8; }
+        .stApp { background: var(--paper); color: var(--ink); }
+        [data-testid="stHeader"] { background: rgba(250,249,244,.92); }
+        .block-container { max-width: 1180px; padding-top: 1.4rem; padding-bottom: 3rem; }
+        html, body, [class*="css"] { font-family: 'DM Sans', sans-serif; }
+        h1, h2, h3 { color: var(--leaf-dark); letter-spacing: -.035em; }
+        h1, h2 { font-family: 'Newsreader', Georgia, serif; font-weight: 600; }
+        h1 { font-size: clamp(2.5rem, 5vw, 4.3rem) !important; line-height: 1.02 !important; }
+        h2 { font-size: 2rem !important; }
+        p, li, label { color: var(--ink); }
+        .plant-brand { font-size: 1.05rem; font-weight: 700; letter-spacing: .02em; color: var(--leaf-dark); }
+        .plant-eyebrow { text-transform: uppercase; letter-spacing: .16em; font-size: .72rem; font-weight: 700; color: var(--leaf); margin-bottom: .8rem; }
+        .plant-intro { max-width: 600px; color: var(--muted); font-size: 1.12rem; line-height: 1.7; }
+        .plant-note { background: #f0f1e8; border-left: 3px solid #78916d; padding: 1rem 1.1rem; color: #465344; border-radius: 0 8px 8px 0; font-size: .94rem; }
+        .sample-caption { font-size: .88rem; font-weight: 600; margin-top: .35rem; color: var(--leaf-dark); }
+        [data-testid="stFileUploader"] { background: #fffefa; border: 1px dashed #a8b5a0; border-radius: 12px; padding: 1rem; }
+        [data-testid="stFileUploader"] section { border: 0; }
+        .stButton > button[kind="primary"] { background: var(--leaf); border: 1px solid var(--leaf); border-radius: 7px; min-height: 2.8rem; font-weight: 600; }
+        .stButton > button[kind="primary"]:hover { background: var(--leaf-dark); border-color: var(--leaf-dark); }
+        .stButton > button { border-radius: 7px; }
+        [data-testid="stMetric"] { background: #fffefa; border: 1px solid var(--line); padding: 1rem; border-radius: 9px; }
+        [data-testid="stAlert"] { border-radius: 8px; }
+        hr { border-color: var(--line); }
+        footer { visibility: hidden; }
+        @media (max-width: 700px) { .block-container { padding-left: 1rem; padding-right: 1rem; } }
+        </style>
+        """,
+        unsafe_allow_html=True,
     )
+
+
+def main():
+    inject_human_ui()
+    st.markdown('<div class="plant-brand">🌿 Plant Doctor <span style="font-weight:400;color:#687267">/ a little help for healthier plants</span></div>', unsafe_allow_html=True)
+    st.divider()
 
     try:
         model, idx_to_class, transform, device, model_version = load_artifacts()
@@ -291,15 +326,48 @@ def main():
         st.error(f"Could not load the model: {error}")
         st.stop()
 
-    st.caption(f"Device: {device} · Model: {model_version}")
+    st.markdown('<div class="plant-eyebrow">A simple plant health check</div>', unsafe_allow_html=True)
+    left, right = st.columns([1.05, 0.95], gap="large")
+    with left:
+        st.markdown("## What's happening to your plant?")
+        st.markdown(
+            '<p class="plant-intro">Noticed something unusual on a leaf? Add a photo and we’ll help you explore what might be happening, with practical next steps.</p>',
+            unsafe_allow_html=True,
+        )
+        st.markdown('<div class="plant-note">For the clearest result, photograph one leaf in natural light and get close enough to see the details.</div>', unsafe_allow_html=True)
+        uploaded_file = st.file_uploader(
+            "Choose a leaf photo",
+            type=["jpg", "jpeg", "png"],
+            help="JPG or PNG. A close, focused photo works best.",
+            label_visibility="visible",
+        )
+        st.caption("JPG or PNG · Clear, well-lit leaf photos work best")
+    with right:
+        st.markdown("#### What kind of photo should I use?")
+        st.markdown(
+            '<p style="color:#687267;margin-top:-.4rem">These examples are visual guides. Upload your own photo using the button on the left.</p>',
+            unsafe_allow_html=True,
+        )
+        sample_cols = st.columns(2, gap="medium")
+        samples = [
+            ("https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=500&q=80", "Healthy leaf", "Clear and in focus"),
+            ("https://images.unsplash.com/photo-1599685315640-7ec7f7b5e2b4?auto=format&fit=crop&w=500&q=80", "Visible spots", "Show the affected area"),
+            ("https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=500&q=80", "Leaf discoloration", "Keep the leaf close"),
+            ("https://images.unsplash.com/photo-1497250681960-ef046c08a56e?auto=format&fit=crop&w=500&q=80", "One leaf at a time", "Avoid distant whole-plant shots"),
+        ]
+        for i, (url, title, caption) in enumerate(samples):
+            with sample_cols[i % 2]:
+                st.image(url, use_container_width=True)
+                st.markdown(f'<div class="sample-caption">{title}</div><div style="font-size:.8rem;color:#687267;margin-bottom:.7rem">{caption}</div>', unsafe_allow_html=True)
 
-    uploaded_file = st.file_uploader(
-        "Upload a clear leaf image",
-        type=["jpg", "jpeg", "png"],
-    )
-
+    st.divider()
     if uploaded_file is None:
-        st.info("For better results, photograph one leaf clearly in good lighting.")
+        st.markdown("#### A few tips before you take the photo")
+        tip1, tip2, tip3 = st.columns(3)
+        tip1.markdown("**Get close**  \nKeep the leaf large in the frame.")
+        tip2.markdown("**Find natural light**  \nAvoid strong shadows and glare.")
+        tip3.markdown("**Keep it steady**  \nMake sure the spots and edges look sharp.")
+        st.caption("Your photo is checked for basic quality before the disease classifier runs.")
         return
 
     try:
@@ -415,17 +483,20 @@ def main():
         )
 
         st.divider()
-        st.subheader("Analysis Result")
-
-        if low_confidence:
-            st.warning("The model is uncertain about this image.")
-        else:
-            st.success("The model produced a relatively high-confidence prediction.")
-
-        st.markdown(f"### {display_name}")
-        st.write(f"**Plant:** {plant}")
-        st.write(f"**Predicted condition:** {disease}")
-        st.metric("Model confidence score", f"{top_prob:.2%}")
+        st.markdown("## What we noticed")
+        result_image, result_text = st.columns([0.9, 1.1], gap="large")
+        with result_image:
+            st.image(image, use_container_width=True)
+            st.caption("Your uploaded leaf")
+        with result_text:
+            if low_confidence:
+                st.warning("The model is unsure about this photo. Treat this as a starting point, not a diagnosis.")
+            else:
+                st.info("Here’s the model’s closest match. It may still be wrong, so compare it with the symptoms you can see.")
+            st.markdown(f"### {display_name}")
+            st.write(f"**Plant:** {plant}")
+            st.write(f"**Possible condition:** {disease}")
+            st.metric("Model confidence score", f"{top_prob:.2%}")
 
         st.caption(
             "This score is derived from the model's output. It is not a verified "
@@ -457,12 +528,15 @@ def main():
         )
 
         st.divider()
-        st.subheader("Top 5 Predictions")
-
-        for label, probability in predictions:
+        st.subheader("Other possible matches")
+        st.caption("These are the model's next closest classes, not confirmed diagnoses.")
+        for rank, (label, probability) in enumerate(predictions, start=1):
             _, _, name = readable_name(label)
-            st.write(f"**{name}** — {probability:.2%}")
-            st.progress(max(0.0, min(1.0, float(probability))))
+            if rank == 1:
+                continue
+            row_name, row_score = st.columns([4, 1])
+            row_name.write(name)
+            row_score.write(f"{probability:.1%}")
 
         st.caption(
             "Reliability limitation: this model classifies images into its "
