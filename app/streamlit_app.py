@@ -27,6 +27,7 @@ from src.predict import (
     load_model,
     get_inference_transform,
     predict_topk,
+    predict_topk_for_crop,
 )
 
 st.set_page_config(
@@ -629,6 +630,26 @@ def main():
     else:
         st.caption("No obvious image-quality issue detected by the basic checks.")
 
+    AUTO_CROP_OPTION = "Automatic (recommended)"
+    crop_options = [AUTO_CROP_OPTION] + [crop.title() for crop in SUPPORTED_CROP_NAMES]
+    crop_choice = st.selectbox(
+        "Do you know which crop this leaf belongs to? (optional)",
+        options=crop_options,
+        index=0,
+        help=(
+            "Automatic mode rejects crop mismatches. If you select a crop, "
+            "the disease classifier is restricted to that crop's classes; this "
+            "does not independently verify the plant species."
+        ),
+        key="confirmed_crop_choice",
+    )
+    crop_was_user_selected = crop_choice != AUTO_CROP_OPTION
+    if crop_was_user_selected:
+        st.caption(
+            f"Crop selected: {crop_choice}. The condition score will be calculated "
+            "only across this crop's model classes, not all 38 classes."
+        )
+
     if st.button("Analyze Leaf", type="primary", width="stretch"):
         
         with st.spinner("Checking image and analyzing the leaf..."):
@@ -680,13 +701,23 @@ def main():
 
             image_tensor = transform(image).unsqueeze(0).to(device)
 
-            predictions = predict_topk(
-                model=model,
-                image_tensor=image_tensor,
-                idx_to_class=idx_to_class,
-                device=device,
-                top_k=5,
-            )
+            if crop_was_user_selected:
+                predictions = predict_topk_for_crop(
+                    model=model,
+                    image_tensor=image_tensor,
+                    idx_to_class=idx_to_class,
+                    device=device,
+                    crop_name=crop_choice,
+                    top_k=5,
+                )
+            else:
+                predictions = predict_topk(
+                    model=model,
+                    image_tensor=image_tensor,
+                    idx_to_class=idx_to_class,
+                    device=device,
+                    top_k=5,
+                )
 
 
         if not predictions:
@@ -699,7 +730,7 @@ def main():
         # Cross-check the crop selected by CLIP against the crop predicted by
         # the disease classifier. This is a conservative heuristic, not proof
         # that either model identified the plant correctly.
-        if best_description in SUPPORTED_PROMPTS:
+        if not crop_was_user_selected and best_description in SUPPORTED_PROMPTS:
             clip_crop = crop_name_from_prompt(best_description)
             if (
                 clip_crop is not None
@@ -743,8 +774,12 @@ def main():
                 "REJECTED_LOW_CONFIDENCE",
             )
             st.divider()
+            score_kind = (
+                "within-crop model score" if crop_was_user_selected
+                else "model score across all classes"
+            )
             st.warning(
-                f"Inconclusive result: the top model score is {top_prob:.1%}, below "
+                f"Inconclusive result: the top {score_kind} is {top_prob:.1%}, below "
                 f"the configured {LOW_CONFIDENCE_THRESHOLD:.0%} threshold. "
                 "No disease diagnosis is being reported."
             )
@@ -759,7 +794,10 @@ def main():
             )
             return
 
-        status = "MODEL_PREDICTION"
+        status = (
+            "MODEL_PREDICTION_USER_SELECTED_CROP"
+            if crop_was_user_selected else "MODEL_PREDICTION"
+        )
         log_prediction(model_version, uploaded_file.name, top_label, top_prob, status)
 
         st.divider()
@@ -769,11 +807,24 @@ def main():
             st.image(image, width="stretch")
             st.caption("Your uploaded leaf")
         with result_text:
-            st.info("Here’s the model’s closest match for a supported crop. It may still be wrong, so compare it with visible symptoms.")
+            if crop_was_user_selected:
+                st.info(
+                    f"You selected {crop_choice} as the crop. The condition prediction "
+                    f"is restricted to {crop_choice} classes. This setting does not "
+                    "independently confirm the plant species, and the condition may still be wrong."
+                )
+            else:
+                st.info(
+                    "Here’s the model’s closest match for a supported crop. It may still "
+                    "be wrong, so compare it with visible symptoms."
+                )
             st.markdown(f"### {display_name}")
             st.write(f"**Plant:** {plant}")
             st.write(f"**Possible condition:** {disease}")
-            st.metric("Model confidence score", f"{top_prob:.2%}")
+            st.metric(
+                "Within-crop condition score" if crop_was_user_selected else "Model confidence score",
+                f"{top_prob:.2%}",
+            )
 
         st.caption(
             "This score is derived from the model's output. It is not a verified "
