@@ -9,14 +9,14 @@ import torch
 from PIL import Image, ImageFilter, ImageStat, ImageOps
 from transformers import CLIPModel, CLIPProcessor
 
+ROOT_DIR = Path(__file__).resolve().parents[1]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
 from src.input_validation import (
     AMBIGUOUS_PROMPT, NON_LEAF_PROMPTS, SUPPORTED_PROMPTS,
     UNSUPPORTED_LEAF_PROMPT, decide_input_scope,
 )
-
-ROOT_DIR = Path(__file__).resolve().parents[1]
-if str(ROOT_DIR) not in sys.path:
-    sys.path.insert(0, str(ROOT_DIR))
 
 LOG_FILE = ROOT_DIR / "logs" / "predictions.log"
 
