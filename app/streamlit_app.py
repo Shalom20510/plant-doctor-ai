@@ -81,10 +81,13 @@ def validate_plant_image(image):
         offset += prompt_count
 
     unsupported_start = len(crop_descriptions)
-    nonleaf_start = unsupported_start + len(UNSUPPORTED_LEAF_PROMPTS)
+    unsupported_end = unsupported_start + len(UNSUPPORTED_LEAF_PROMPTS)
     unsupported_prompt_scores = [
-        float(value.item()) for value in logits[unsupported_start:nonleaf_start]
+        float(value.item()) for value in logits[unsupported_start:unsupported_end]
     ]
+    ambiguous_index = unsupported_end
+    ambiguous_prompt_score = float(logits[ambiguous_index].item())
+    nonleaf_start = ambiguous_index + 1
     non_leaf_prompt_scores = {
         prompt: float(logits[nonleaf_start + index].item())
         for index, prompt in enumerate(NON_LEAF_PROMPTS)
