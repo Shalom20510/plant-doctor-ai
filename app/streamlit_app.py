@@ -44,7 +44,7 @@ TRANSLATIONS = {
         "Language / భాష": "Language / భాష",
         "A simple plant health check": "మొక్క ఆరోగ్యాన్ని సులభంగా పరీక్షించండి",
         "What's happening to your plant?": "మీ మొక్కకు ఏమైంది?",
-        tr("Choose a leaf photo"): "ఆకు ఫోటోను ఎంచుకోండి",
+        "Choose a leaf photo": "ఆకు ఫోటోను ఎంచుకోండి",
         "JPG or PNG · Clear, well-lit leaf photos work best": "JPG లేదా PNG · స్పష్టమైన, మంచి వెలుతురు ఉన్న ఫోటోలు ఉత్తమం",
         "A few tips before you take the photo": "ఫోటో తీయడానికి ముందు కొన్ని సూచనలు",
         "Your photo": "మీ ఫోటో",
@@ -549,7 +549,7 @@ def main():
     st.markdown(f'<div class="plant-eyebrow">{tr("A simple plant health check")}</div>', unsafe_allow_html=True)
     left, right = st.columns([1.05, 0.95], gap="large")
     with left:
-        st.markdown(f"## {tr(\"What's happening to your plant?\")}")
+        st.markdown("## " + tr("What's happening to your plant?"))
         st.markdown(
             '<p class="plant-intro">Noticed something unusual on a leaf? Add a photo and we’ll help you explore what might be happening, with practical next steps.</p>',
             unsafe_allow_html=True,
@@ -631,7 +631,7 @@ def main():
 
     st.divider()
     if uploaded_file is None:
-        st.markdown(f"#### {tr(\"A few tips before you take the photo\")}")
+        st.markdown("#### " + tr("A few tips before you take the photo"))
         tip1, tip2, tip3 = st.columns(3)
         tip1.markdown("**Get close**  \nKeep one leaf large in the frame.")
         tip2.markdown("**Use daylight**  \nAvoid strong shadows and glare.")
@@ -652,7 +652,7 @@ def main():
     with photo_col:
         st.image(image, width="stretch")
     with space_col:
-        st.markdown(f"**{tr(\"Before analysis\")}**")
+        st.markdown("**" + tr("Before analysis") + "**")
         st.caption("Check that the leaf is visible and the affected area is in focus.")
         st.caption("The image-quality checks below may recommend a clearer photo.")
 
@@ -759,7 +759,7 @@ def main():
                     "REJECTED_CROP_MISMATCH",
                 )
                 st.divider()
-                st.markdown(f"## {tr(\"Inconclusive result\")}")
+                st.markdown("## " + tr("Inconclusive result"))
                 mismatch_image, mismatch_text = st.columns([0.9, 1.1], gap="large")
                 with mismatch_image:
                     st.image(image, width="stretch")
@@ -808,7 +808,7 @@ def main():
         log_prediction(model_version, uploaded_file.name, top_label, top_prob, "MODEL_PREDICTION")
 
         st.divider()
-        st.markdown(f"## {tr(\"What we noticed\")}")
+        st.markdown("## " + tr("What we noticed"))
         result_image, result_text = st.columns([0.9, 1.1], gap="large")
         with result_image:
             st.image(image, width="stretch")
