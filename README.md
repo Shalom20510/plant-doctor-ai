@@ -74,9 +74,11 @@ The script compares the original images with synthetic dim/bright, 15°/30° rot
 
 For a quick smoke test, use `--max_images 20`; remove that option for the full dataset. This report is only as representative as the dataset. The edge-clutter transformation is a simple synthetic stress test, not a realistic background replacement. For final results, use a separate held-out test set and include real field photos.
 
-The app also screens for low resolution, blur, extreme brightness, unusual framing, and potentially busy backgrounds. Severe quality warnings and ambiguous CLIP image validation ask the user to upload a clearer leaf photo. These checks are heuristic and may make mistakes; they are not a guarantee of disease-diagnosis accuracy.
+The app also screens for low resolution, blur, extreme brightness, unusual framing, potentially busy backgrounds, and an explicit ambiguous-image CLIP prompt. Severe quality warnings and ambiguous/unsupported scope results ask the user to upload a clearer leaf photo. These checks are heuristic and may make mistakes; they are not a guarantee of disease-diagnosis accuracy.
 
 ## Mission 03 — Unsupported input detection and reliable predictions
+
+**Mission 04 evaluation notes:** See [`docs/MISSION_04_EVALUATION.md`](docs/MISSION_04_EVALUATION.md) for the rejection approach, observed manual cases, automated test scope, limitations, and a short demo sequence.
 
 The Streamlit app runs two separate checks before showing a disease result:
 
