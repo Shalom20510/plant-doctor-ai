@@ -680,9 +680,9 @@ def main():
     if uploaded_file is None:
         st.markdown("#### " + tr("A few tips before you take the photo"))
         tip1, tip2, tip3 = st.columns(3)
-        tip1.markdown("**{tr("Get close")}**  \n{tr("Keep one leaf large in the frame.")}")
-        tip2.markdown("**{tr("Use daylight")}**  \n{tr("Avoid strong shadows and glare.")}")
-        tip3.markdown("**{tr("Keep it steady")}**  \n{tr("Keep the leaf details sharp.")}")
+        tip1.markdown("**" + tr("Get close") + "**  \\n" + tr("Keep one leaf large in the frame."))
+        tip2.markdown("**" + tr("Use daylight") + "**  \\n" + tr("Avoid strong shadows and glare."))
+        tip3.markdown("**" + tr("Keep it steady") + "**  \\n" + tr("Keep the leaf details sharp."))
         st.caption(tr("Your photo is checked for basic quality before the disease classifier runs."))
         return
 
