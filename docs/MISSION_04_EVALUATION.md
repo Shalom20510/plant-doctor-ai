@@ -6,8 +6,9 @@
 - **Unsupported plant screening:** CLIP compares supported crop prompts with prompts for unsupported/unknown plant leaves. If the unsupported-leaf category wins, the app returns an unsupported result.
 - **Ambiguous image screening:** The live CLIP screen rejects low supported-crop scope scores, while basic image-quality checks flag very small images, unusual framing, blur, extreme brightness, and busy backgrounds. The live screen does not currently compare a separate ambiguity prompt. These are heuristics, not a trained quality classifier.
 - **Disease confidence rejection:** the app rejects predictions below `LOW_CONFIDENCE_THRESHOLD = 0.60` and shows an inconclusive result rather than disease guidance.
-- **Crop consistency:** the UI uses automatic screening only. If the CLIP crop and disease-model crop disagree, the app returns an inconclusive result rather than displaying a disease prediction. There is no manual crop selector.
-- **Communication:** rejected inputs display a reason, state that disease prediction was not run, and explain that CLIP scores are relative rather than calibrated probabilities.
+- **Crop consistency:** the interface supports Auto-detect and manual Plant type selection. In Auto-detect, CLIP and the disease classifier are cross-checked; if they disagree, the app returns an inconclusive result. For a manually selected crop, the app first checks the selection against the classifier’s overall top crop before using crop-filtered scores. Manual selection does not verify plant identity.
+- **Ambiguous classifier output:** the app rejects top-two disease scores separated by less than 0.08 and does not show disease-care guidance for that result. This is a heuristic threshold, not calibrated uncertainty.
+- **Communication:** rejected inputs display a reason, state that disease prediction was not run, and explain that CLIP/softmax scores are not calibrated probabilities.
 
 ## Evaluation evidence
 
@@ -74,7 +75,7 @@ A successful, independently verified disease prediction on a supported crop, a r
 
 ## How to generate the missing measured evidence
 
-First, place the labeled dataset in `data/plantvillage/color/<class-name>/*`. The class folder names and alphabetical order must match the checkpoint. Do not report invented metrics or use screenshots of predictions as a substitute for aggregate metrics.
+For an initial smoke test, run `py scripts/download_eval_samples.py` to fetch a small sample set into `artifacts/evaluation/test_data`. **Caution:** supported images are selected from the upstream PlantVillage repository and may overlap with training data; they are not guaranteed independent held-out images. Do not use those scores to claim generalization. For a valid quantitative benchmark, obtain a separate, licensed, independently held-out labeled dataset with class names compatible with the checkpoint. Do not report invented metrics or use screenshots of predictions as a substitute for aggregate metrics.
 
 From the repository root on Windows, run:
 
