@@ -1,4 +1,8 @@
-"""Download a curated held-out test dataset for Plant Doctor AI validation.
+"""Download a curated smoke-test sample set for Plant Doctor AI.
+
+IMPORTANT: supported images are selected from the upstream PlantVillage repository.
+They may overlap with training data, so they are NOT guaranteed to be independent
+held-out examples and must not support generalization/accuracy claims.
 Includes:
 1. Supported crop leaf images across 10 classes (healthy and diseased).
 2. Non-leaf images (vehicle, person, building, everyday object).
@@ -26,7 +30,7 @@ SUPPORTED_CLASSES = [
 SAMPLES_PER_CLASS = 5
 
 def fetch_supported_images():
-    print("--- Fetching Supported Held-Out Plant Images ---")
+    print("--- Fetching Supported PlantVillage Smoke-Test Images (not guaranteed held out) ---")
     headers = {"User-Agent": "PlantDoctor-Eval/1.0"}
     for class_name in SUPPORTED_CLASSES:
         class_dir = DEST_ROOT / "supported" / class_name
