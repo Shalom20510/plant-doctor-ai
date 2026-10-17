@@ -80,12 +80,12 @@ The app also screens for low resolution, blur, extreme brightness, unusual frami
 
 **Mission 04 evaluation notes:** See [`docs/MISSION_04_EVALUATION.md`](docs/MISSION_04_EVALUATION.md) for the rejection approach, observed manual cases, automated test scope, limitations, and a short demo sequence.
 
-The Streamlit app runs two separate checks before showing a disease result:
+The Streamlit app applies multiple safeguards before showing a disease result:
 
 1. **Input-scope screening:** CLIP compares the uploaded image against five text descriptions per supported crop, including a morphology-focused description for each of the 14 crop groups (apple, blueberry, cherry, corn, grape, orange, peach, bell pepper, potato, raspberry, soybean, squash, strawberry, and tomato). The app averages the prompt logits within each crop before comparing the best crop against unsupported-leaf and non-leaf categories. Inputs outside the supported scope or below the scope-score threshold are rejected with an explanation.
-2. **Disease-model confidence rule:** if the top disease-class softmax score is below `LOW_CONFIDENCE_THRESHOLD = 0.60`, the app shows an **inconclusive** result, lists the closest model categories as alternatives rather than diagnoses, logs the rejection, and does not show disease-care guidance.
+2. **Disease-model uncertainty rules:** if the top disease-class softmax score is below `LOW_CONFIDENCE_THRESHOLD = 0.60`, or the gap between the top two class scores is below `0.08`, the app shows an **inconclusive** result and does not show disease-care guidance. These are heuristic rules, not calibrated probabilities.
 
-For supported-candidate images that pass both checks, the app displays the predicted crop/disease category, model score, alternatives, and general care information. A score of 60% is a prototype decision threshold, not a verified probability that the prediction is correct.
+For images that pass the scope, image-quality, crop-consistency, and uncertainty checks, the app displays a predicted crop/condition category, an uncalibrated score band, alternative matches, and general educational care information. Passing these checks does not guarantee the diagnosis is correct.
 
 ### Crop selection and consistency safeguards
 
