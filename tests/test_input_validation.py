@@ -151,3 +151,35 @@ def test_prompt_ensemble_rejects_a_strong_ambiguous_match():
     )
     assert description == AMBIGUOUS_PROMPT
     assert supported_score < 0.01
+
+from src.input_validation import prediction_margin_is_ambiguous
+
+
+def test_close_top_predictions_are_flagged_as_ambiguous():
+    assert prediction_margin_is_ambiguous([
+        ("Tomato___healthy", 0.43),
+        ("Tomato___Early_blight", 0.39),
+        ("Tomato___Late_blight", 0.10),
+    ]) is True
+
+
+def test_clear_top_prediction_is_not_flagged_by_margin_rule():
+    assert prediction_margin_is_ambiguous([
+        ("Tomato___healthy", 0.78),
+        ("Tomato___Early_blight", 0.12),
+    ]) is False
+
+
+def test_margin_rule_handles_single_prediction():
+    assert prediction_margin_is_ambiguous([("Tomato___healthy", 1.0)]) is False
+
+
+@pytest.mark.parametrize("margin", [-0.1, 1.1])
+def test_margin_rule_rejects_invalid_threshold(margin):
+    with pytest.raises(ValueError):
+        prediction_margin_is_ambiguous([("a", 0.6), ("b", 0.4)], margin)
+
+
+def test_margin_rule_rejects_invalid_prediction_scores():
+    with pytest.raises(ValueError):
+        prediction_margin_is_ambiguous([("a", float("nan")), ("b", 0.4)])
