@@ -27,6 +27,7 @@ from src.predict import (
     load_model,
     get_inference_transform,
     predict_topk,
+    predict_topk_for_crop,
 )
 
 st.set_page_config(
@@ -649,6 +650,22 @@ def main():
             unsafe_allow_html=True,
         )
         st.markdown(f'<div class="plant-note">{tr("For the clearest result, photograph one leaf in natural light and get close enough to see the details.")}</div>', unsafe_allow_html=True)
+        crop_options = ["Auto-detect"] + [crop.title() for crop in SUPPORTED_CROP_NAMES]
+        selected_crop_label = st.selectbox(
+            "Plant type",
+            options=crop_options,
+            help=(
+                "Choose the plant if you know it. Auto-detect can confuse similar-looking "
+                "leaves. Choosing a plant limits predictions to the model classes for that crop."
+            ),
+        )
+        selected_crop = (
+            None if selected_crop_label == "Auto-detect" else selected_crop_label.lower()
+        )
+        st.caption(
+            "For best results, choose the crop when automatic screening disagrees. "
+            "Your selection is not independent proof of plant identity."
+        )
         uploaded_file = st.file_uploader(
             tr("Choose a leaf photo"),
             type=["jpg", "jpeg", "png"],
@@ -779,7 +796,9 @@ def main():
             scope = decide_input_scope(best_description, supported_score, best_score)
             st.caption(f"{tr('Input scope check')}: {tr(scope['status'].replace('_', ' ').title())} ({tr('winning scope-category score')}: {best_score:.1%}; {tr('supported-crop scope score')}: {supported_score:.1%}).")
             st.caption(tr("These are relative CLIP scores, not calibrated probabilities. The scope check can accept or reject images incorrectly."))
-            if not scope["accepted"]:
+            if not scope["accepted"] and (
+                selected_crop is None or scope["status"] == "non_leaf"
+            ):
                 st.warning(f"{tr('Inconclusive / unsupported input')}: {tr(scope['reason'])}")
                 log_prediction(
                     model_version, uploaded_file.name, "NO_PREDICTION",
@@ -804,18 +823,53 @@ def main():
 
             image_tensor = transform(image).unsqueeze(0).to(device)
 
-            predictions = predict_topk(
-                model=model,
-                image_tensor=image_tensor,
-                idx_to_class=idx_to_class,
-                device=device,
-                top_k=5,
-            )
+            if selected_crop is not None:
+                predictions = predict_topk_for_crop(
+                    model=model,
+                    image_tensor=image_tensor,
+                    idx_to_class=idx_to_class,
+                    device=device,
+                    crop_name=selected_crop,
+                    top_k=5,
+                )
+            else:
+                predictions = predict_topk(
+                    model=model,
+                    image_tensor=image_tensor,
+                    idx_to_class=idx_to_class,
+                    device=device,
+                    top_k=5,
+                )
 
 
         if not predictions:
             st.error(tr("The model did not return a prediction."))
             return
+
+        if selected_crop is not None:
+            selected_crop_normalized = normalize_crop_name(selected_crop)
+            selected_crop_classes = [
+                label for label in idx_to_class.values()
+                if normalize_crop_name(label.partition("___")[0]) == selected_crop_normalized
+            ]
+            selected_crop_conditions = [
+                label.partition("___")[2].lower() for label in selected_crop_classes
+            ]
+            if len(selected_crop_classes) <= 1 or all(
+                "healthy" in condition for condition in selected_crop_conditions
+            ):
+                st.divider()
+                st.markdown("## Limited disease coverage")
+                st.warning(
+                    f"The current model does not have enough distinct disease classes "
+                    f"for {selected_crop_label}. It cannot reliably check diseases for "
+                    "this crop, so no disease diagnosis is being reported."
+                )
+                st.caption(
+                    "A healthy-only class is not evidence that a visibly spotted leaf is healthy. "
+                    "This crop needs additional labeled disease examples and model training."
+                )
+                return
 
         top_label, top_prob = predictions[0]
         plant, disease, display_name = readable_name(top_label)
@@ -823,7 +877,7 @@ def main():
         # Cross-check the crop selected by CLIP against the crop predicted by
         # the disease classifier. This is a conservative heuristic, not proof
         # that either model identified the plant correctly.
-        if best_description in SUPPORTED_PROMPTS:
+        if selected_crop is None and best_description in SUPPORTED_PROMPTS:
             clip_crop = crop_name_from_prompt(best_description)
             if (
                 clip_crop is not None
@@ -880,6 +934,11 @@ def main():
             st.write(f"**{tr('Possible condition')}:** {tr(disease)}")
             st.metric(tr("Model confidence score"), f"{top_prob:.2%}")
 
+        if selected_crop is not None:
+            st.caption(
+                f"Crop selected by you: {selected_crop_label}. The model score is conditional "
+                "on this crop's available classes; it does not verify the plant identity."
+            )
         st.caption(tr("This score is derived from the model's output. It is not a verified probability that the diagnosis is correct. The model can be wrong even when its score is high."))
 
         if quality_warnings:
