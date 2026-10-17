@@ -16,6 +16,7 @@ Use this checklist immediately before recording and submitting. It distinguishes
 | Live deployment | Link supplied; current status **NOT VERIFIED** | https://plant-doctor-ai-gzqqjtpxbjdwp85ur3fnkh.streamlit.app/ — open it and verify the latest code before recording. |
 | Demo video | **PENDING — next action** | Follow [DEMO_RECORDING_SCRIPT.md](DEMO_RECORDING_SCRIPT.md), upload the recording, then paste its share link into the submission form. |
 | AI/tool disclosure | Draft below; confirm team has reviewed it | Include the disclosure in submission notes or the required form. |
+| Accessibility/usability | Basic bilingual UI present; formal audit **PENDING** | English/Telugu selector and readable web layout exist. Before recording, check keyboard navigation, visible labels, zoom/readability, and mobile/desktop layout; do not claim WCAG compliance without an audit. |
 | Team understanding / jury readiness | **Team action required** | Every presenter must explain the architecture, limits, contributions, and test evidence without reading claims they cannot defend. |
 
 ## AI and technology disclosure
@@ -40,6 +41,7 @@ Use this checklist immediately before recording and submitting. It distinguishes
 - [ ] Prepare a small set of clear images and know the correct labels before recording.
 - [ ] Test one supported leaf, one non-leaf photo, one unsupported leaf, and one blurry/dark photo. Record what actually happens; do not force a claim that every case passes.
 - [ ] If a chosen crop triggers a mismatch warning, explain that the safeguard prevented a potentially misleading diagnosis.
+- [ ] Check keyboard navigation, readable zoom, labels, and layout; do not claim formal accessibility compliance without an audit.
 - [ ] Close personal tabs, hide secrets/notifications, enlarge the browser text, and record a clean screen.
 - [ ] Save the final video and test the share link in an incognito/private window.
 - [ ] Submit repository URL, live app URL, video URL, and the required AI disclosure.
