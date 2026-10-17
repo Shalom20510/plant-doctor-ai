@@ -17,6 +17,7 @@ from src.input_validation import (
     CROP_PROMPT_VARIANTS, NON_LEAF_PROMPTS, SUPPORTED_CROP_NAMES,
     SUPPORTED_PROMPTS, UNSUPPORTED_LEAF_PROMPTS, aggregate_scope_logits,
     decide_input_scope, crop_name_from_prompt, normalize_crop_name,
+    prediction_margin_is_ambiguous,
 )
 
 LOG_FILE = ROOT_DIR / "logs" / "predictions.log"
@@ -890,6 +891,27 @@ def main():
                     "This crop needs additional labeled disease examples and model training."
                 )
                 return
+
+        if prediction_margin_is_ambiguous(predictions, margin_threshold=0.08):
+            log_prediction(
+                model_version, uploaded_file.name, predictions[0][0],
+                predictions[0][1], "REJECTED_AMBIGUOUS_PREDICTION",
+            )
+            st.divider()
+            st.markdown("## " + tr("Inconclusive result"))
+            st.warning(
+                "The model's top two possible classes are too close for this prototype "
+                "to report a diagnosis reliably. No disease diagnosis is being reported."
+            )
+            st.write("Closest model categories (not diagnoses):")
+            for label, _score in predictions[:3]:
+                _, _, name = readable_name(label)
+                st.write(f"- {name}")
+            st.caption(
+                "This is a heuristic ambiguity rule, not a calibrated uncertainty estimate. "
+                "Try a sharper photo and compare visible symptoms; the model can still be wrong."
+            )
+            return
 
         top_label, top_prob = predictions[0]
         plant, disease, display_name = readable_name(top_label)
