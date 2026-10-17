@@ -87,9 +87,13 @@ The Streamlit app runs two separate checks before showing a disease result:
 
 For supported-candidate images that pass both checks, the app displays the predicted crop/disease category, model score, alternatives, and general care information. A score of 60% is a prototype decision threshold, not a verified probability that the prediction is correct.
 
-### Automatic crop-consistency rejection
+### Crop selection and consistency safeguards
 
-The UI does not ask the user to choose a crop. CLIP screens the image automatically, and the disease classifier predicts across its trained classes. If the crop candidate from CLIP and the crop label from the disease classifier disagree, the app returns an inconclusive mismatch result instead of displaying a disease prediction. This is a heuristic safeguard: it can reject valid images when CLIP is wrong, and matching crop labels do not guarantee a correct diagnosis.
+The interface offers **Auto-detect** and a manual **Plant type** selector. In Auto-detect mode, CLIP screens the image and the disease classifier predicts across its trained classes; a disagreement between their crop labels returns an inconclusive result. If a user selects a plant type, the app first compares that selection with the disease model's overall top crop and rejects a mismatch before showing crop-filtered results. A manual selection narrows the candidate classes but does not prove plant identity. These are heuristic safeguards: they can reject valid photos and can still accept an incorrect crop when models agree.
+
+### Ambiguous prediction safeguard
+
+The app returns an inconclusive result when the top two disease-class softmax scores differ by less than 0.08. It also rejects results below the configured 0.60 score threshold. These are prototype rules, not calibrated probabilities or proven optimal thresholds. The interface labels the displayed score band as uncalibrated and avoids presenting raw softmax values as guaranteed accuracy.
 
 ### How to demonstrate the required cases
 
@@ -146,12 +150,26 @@ py -m src.robustness --data_dir data/plantvillage/color --checkpoint artifacts/m
 This is a small smoke test, not a full benchmark. Use the same labeled images for each synthetic condition, and use an independent held-out test set for final claims. Do not fabricate missing metrics. The recorded checkpoint validation metrics are not robustness results.
 
 
-### Dataset-free smoke tests
+### Dataset-free automated tests
 
-The transformation helpers have lightweight tests that do not require the PlantVillage dataset:
+Run the repository's pytest suite (also run by GitHub Actions on pushes and pull requests):
 
 ```cmd
-py -m unittest discover -s tests -v
+py -m pytest -q
 ```
 
-These tests check that expected transformations are produced, image dimensions/modes are preserved, synthetic clutter is repeatable for a fixed seed, and brightness variants differ. They do **not** measure classifier accuracy or establish real-world robustness.
+These tests verify deterministic input-scope rules, crop-conditioned prediction behavior, checkpoint/model helpers, and image-transformation helpers. They do **not** measure real-world classifier accuracy, CLIP rejection accuracy, or field robustness. The latest recorded GitHub Actions run is linked from the submission checklist.
+
+
+## Mission 05 — Submission readiness
+
+- **Repository and setup:** this README, `requirements.txt`, `configs/config.yaml`, model checkpoint, and class mapping are included.
+- **Automated tests:** run `py -m pytest -q`; CI status and limitations are recorded in [the submission checklist](docs/MISSION_05_SUBMISSION.md).
+- **Test cases and evidence:** see [Mission 04 evaluation notes](docs/MISSION_04_EVALUATION.md). Aggregate image-based evaluation is still pending; do not claim unmeasured accuracy or rejection rates.
+- **Demo recording:** follow [the demo script](docs/DEMO_RECORDING_SCRIPT.md).
+- **AI/tool disclosure:** see the submission checklist for the model, screening component, software, and coding-assistance disclosure.
+- **Live deployment:** [Open the Streamlit app](https://plant-doctor-ai-gzqqjtpxbjdwp85ur3fnkh.streamlit.app/). Confirm it loads and reflects the latest `main` commit before recording; live deployment was not verified by this repository audit.
+
+## AI and dataset disclosure
+
+The disease classifier is an EfficientNet-B0 model with 38 PlantVillage-style classes across 14 crop groups. CLIP (`openai/clip-vit-base-patch32`) screens image scope and crop candidates; it does not independently diagnose plant disease. The app is built with Streamlit, PyTorch/torchvision, Pillow, and Hugging Face Transformers. ChatGPT was used to assist with code drafting/debugging and documentation during development; the team remains responsible for reviewing, understanding, testing, and presenting the submitted code. The model output is a prototype estimate, not an agronomic diagnosis. The training dataset is not bundled. See the submission checklist for limitations and disclosure details.
