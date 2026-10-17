@@ -50,7 +50,7 @@ def fetch_supported_images():
                 items = json.loads(resp.read().decode())
                 
             image_items = [it for it in items if it["name"].lower().endswith((".jpg", ".jpeg", ".png"))]
-            # Take images from the tail or middle to act as true held-out set
+            # Select a small reproducible sample from the source repository; this is not guaranteed independent of training data.
             selected = image_items[-SAMPLES_PER_CLASS:]
             
             for i, item in enumerate(selected):
