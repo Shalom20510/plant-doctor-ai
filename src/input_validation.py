@@ -215,3 +215,22 @@ def decide_input_scope(
         "supported_score": supported_score,
         "best_score": best_score,
     }
+
+
+def prediction_margin_is_ambiguous(
+    predictions: list[tuple[str, float]],
+    margin_threshold: float = 0.08,
+) -> bool:
+    """Return whether the top two model scores are too close for a demo result.
+
+    Scores are model softmax outputs, not calibrated correctness probabilities.
+    This is a conservative prototype rule that must be evaluated on labeled images.
+    """
+    if not 0.0 <= margin_threshold <= 1.0:
+        raise ValueError("margin_threshold must be between 0 and 1")
+    if any(not math.isfinite(float(score)) or not 0.0 <= float(score) <= 1.0
+           for _, score in predictions):
+        raise ValueError("prediction scores must be finite values between 0 and 1")
+    if len(predictions) < 2:
+        return False
+    return float(predictions[0][1]) - float(predictions[1][1]) < margin_threshold

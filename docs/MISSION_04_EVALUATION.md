@@ -99,3 +99,8 @@ For transformed-image robustness, report each condition's accuracy and macro-F1 
 5. Keep failed and incorrect predictions in the report. Never describe a high confidence score as proof that a prediction is correct.
 
 **Submission honesty note:** until the dataset-backed commands have run and the generated reports have been inspected, the aggregate classification and robustness metrics remain pending. The repository contains evaluation tooling and limited manual observations, not completed quantitative validation.
+
+
+## Additional ambiguity rejection rule
+
+The app also checks the gap between the top two disease-class softmax scores. If the gap is below 0.08, it returns an inconclusive result and does not display disease-care guidance. This is a **prototype heuristic**, not a calibrated uncertainty estimate; it can reject correct predictions and cannot guarantee that accepted predictions are correct. The threshold should be tuned against labeled validation data and then checked on a separate test set before making reliability claims. Automated tests use synthetic score lists and do not measure real-world accuracy.
