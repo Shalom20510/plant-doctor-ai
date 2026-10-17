@@ -823,7 +823,33 @@ def main():
 
             image_tensor = transform(image).unsqueeze(0).to(device)
 
+            # Always retain the full 38-class prediction as a crop-identity
+            # cross-check. Crop-filtered scores alone can look extremely high
+            # even when the user selected the wrong plant type.
+            global_predictions = predict_topk(
+                model=model,
+                image_tensor=image_tensor,
+                idx_to_class=idx_to_class,
+                device=device,
+                top_k=5,
+            )
             if selected_crop is not None:
+                global_crop = global_predictions[0][0].partition("___")[0]
+                if normalize_crop_name(global_crop) != normalize_crop_name(selected_crop):
+                    log_prediction(
+                        model_version, uploaded_file.name, global_predictions[0][0],
+                        global_predictions[0][1], "REJECTED_SELECTED_CROP_MISMATCH",
+                    )
+                    st.warning(
+                        f"Selected plant type ({selected_crop_label}) does not match "
+                        f"the model's overall top crop ({global_crop.replace('_', ' ').title()}). "
+                        "No diagnosis is being reported. Check the plant type or upload a clearer leaf photo."
+                    )
+                    st.caption(
+                        "This cross-check is a safeguard, not proof of plant identity; "
+                        "the model can still misidentify unfamiliar plants."
+                    )
+                    return
                 predictions = predict_topk_for_crop(
                     model=model,
                     image_tensor=image_tensor,
@@ -833,13 +859,7 @@ def main():
                     top_k=5,
                 )
             else:
-                predictions = predict_topk(
-                    model=model,
-                    image_tensor=image_tensor,
-                    idx_to_class=idx_to_class,
-                    device=device,
-                    top_k=5,
-                )
+                predictions = global_predictions
 
 
         if not predictions:
@@ -932,7 +952,16 @@ def main():
             st.markdown(f"### {tr(plant)} — {tr(disease)}")
             st.write(f"**{tr('Plant')}:** {tr(plant)}")
             st.write(f"**{tr('Possible condition')}:** {tr(disease)}")
-            st.metric(tr("Model confidence score"), f"{top_prob:.2%}")
+            score_band = (
+                "High raw model score" if top_prob >= 0.90
+                else "Moderate raw model score" if top_prob >= 0.60
+                else "Low raw model score"
+            )
+            st.metric("Model score (uncalibrated)", score_band)
+            st.caption(
+                "The model's raw softmax score is intentionally not shown as a percentage: "
+                "it can be overconfident and is not a calibrated probability of a correct diagnosis."
+            )
 
         if selected_crop is not None:
             st.caption(
@@ -966,7 +995,7 @@ def main():
                 continue
             row_name, row_score = st.columns([4, 1])
             row_name.write(name)
-            row_score.write(f"{probability:.1%}")
+            row_score.write("Possible match")
 
         st.caption(tr("Reliability limitation: this model classifies images into its known classes. These checks do not reliably detect every unsupported plant, unrelated image, or incorrect high-confidence prediction."))
 
